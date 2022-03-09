@@ -2,7 +2,7 @@
 chrome.runtime.onInstalled.addListener(() => {
   /** アイコンクリック時のメニュー追加 */
   chrome.contextMenus.create({
-    title: "Extension Option",
+    title: "Open NCBrowser",
     id: "main-page",
     contexts: ["action"],
   });

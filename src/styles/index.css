@@ -1,0 +1,12 @@
+body {
+  font-family: "Segoe UI", Arial, Meiryo, sans-serif;
+  font-size: 75%;
+}
+
+/* 各列 */
+.comment-view-row {
+  display: flex;
+  word-break: break-all;
+  align-items: center;
+  border-top: 1px dashed gray;
+}
