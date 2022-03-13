@@ -1,12 +1,12 @@
-export type Fn<T extends any[] = []> = (...arg: T) => void;
+import { Fn } from "../types";
 
 /**
  * トリガーへ関数の追加・削除のみさせるインターフェース
  */
 export interface SetOnlyTrigger<T extends any[] = []> {
-  add(fn: Fn<T>): void;
-  addOnce(fn: Fn<T>): void;
-  delete(fn: Fn<T>): void;
+  add(fn: Fn<T, void>): void;
+  addOnce(fn: Fn<T, void>): void;
+  delete(fn: Fn<T, void>): void;
 }
 
 /**
@@ -14,7 +14,7 @@ export interface SetOnlyTrigger<T extends any[] = []> {
  * @template T 登録する関数の引数型
  */
 export class Trigger<T extends any[] = []> implements SetOnlyTrigger<T> {
-  private readonly funcSet = new Set<Fn<T>>();
+  private readonly funcSet = new Set<Fn<T, void>>();
 
   /**
    * 外部へ公開するためのセット専用トリガー
@@ -27,7 +27,7 @@ export class Trigger<T extends any[] = []> implements SetOnlyTrigger<T> {
    * `fire`されたら実行される関数を追加する
    * @param fn 関数
    */
-  public add(fn: Fn<T>) {
+  public add(fn: Fn<T, void>) {
     this.funcSet.add(fn);
   }
 
@@ -35,7 +35,7 @@ export class Trigger<T extends any[] = []> implements SetOnlyTrigger<T> {
    * `fire`されたら１度だけ実行される関数を追加する
    * @param fn 関数
    */
-  public addOnce(fn: Fn<T>) {
+  public addOnce(fn: Fn<T, void>) {
     const onceFn = (...args: T) => {
       fn(...args);
       this.delete(onceFn);
@@ -47,7 +47,7 @@ export class Trigger<T extends any[] = []> implements SetOnlyTrigger<T> {
    * 追加した関数を削除する
    * @param fn 関数
    */
-  public delete(fn: Fn<T>) {
+  public delete(fn: Fn<T, void>) {
     this.funcSet.delete(fn);
   }
 

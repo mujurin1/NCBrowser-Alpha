@@ -1,31 +1,32 @@
 import React, { useEffect, useMemo } from "react";
 import ReactDOM from "react-dom";
 import { Button } from "@mui/material";
-import { ChatMediation } from "./LiveCycle/ChatMediation";
-import { DemoChatViewer } from "./__demo__/DemoChatViewer";
-import { DemoLiveManager } from "./__demo__/DemoLiveManager";
 
 import "../styles/index.css";
+import { DemoLivePlatform } from "./__demo__/DemoLivePlatform";
+import { LivePlatformManager } from "./LivePlatform/LivePlatformManager";
+import { CommentView } from "./components/CommentView";
 
 let auto = false;
 function MainConponent() {
-  const demoLiveManager = useMemo(
-    () => new DemoLiveManager(ChatMediation),
-    [ChatMediation]
+  const demoLivePlatform = useMemo(() => new DemoLivePlatform(), []);
+  const livePlatformManager = useMemo(
+    () => new LivePlatformManager(demoLivePlatform),
+    []
   );
 
   useEffect(() => {
     setInterval(() => {
-      if (auto) demoLiveManager.DEMO_createChat();
-    }, 100);
-  }, [demoLiveManager, auto]);
+      if (auto) demoLivePlatform.newComment();
+    }, 500);
+  }, [demoLivePlatform, auto]);
 
   return (
     <div>
       <div>
         <Button
           variant="contained"
-          onClick={() => demoLiveManager.DEMO_createChat()}
+          onClick={() => demoLivePlatform.newComment()}
         >
           追加
         </Button>
@@ -33,7 +34,7 @@ function MainConponent() {
           A
         </Button>
       </div>
-      <DemoChatViewer tool={ChatMediation} />
+      <CommentView livePlatformManager={livePlatformManager} />
     </div>
   );
 }

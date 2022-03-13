@@ -1,4 +1,4 @@
-import { Trigger } from "../common/Trigger";
+import { Trigger } from "../scripts/common/Trigger";
 
 describe("Trigger", () => {
   test("Normal", () => {
