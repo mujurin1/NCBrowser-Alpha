@@ -4,6 +4,7 @@ import { LivePlatform, UpdateVariation } from "../LivePlatform/LivePlatform";
 import { LiveState } from "../LivePlatform/LiveState";
 import { NcbComment } from "../LivePlatform/NcbComment";
 import { NcbUser } from "../LivePlatform/NcbUser";
+import { assert } from "../utils/util";
 
 /**
  * テスト用デモ配信プラットフォーム
@@ -27,8 +28,8 @@ export class DemoLivePlatform implements LivePlatform {
   liveState?: LiveState;
 
   readonly updateLiveState = this.#updateLiveState.asSetOnlyTrigger();
-  readonly updateComments = this.#updateComments.asSetOnlyTrigger();
-  readonly updateUsers = this.#updateUsers.asSetOnlyTrigger();
+  readonly changeComments = this.#updateComments.asSetOnlyTrigger();
+  readonly changeUsers = this.#updateUsers.asSetOnlyTrigger();
 
   public constructor() {}
 
@@ -38,7 +39,7 @@ export class DemoLivePlatform implements LivePlatform {
     let user = this.#demoUsers[comment.userInnerId];
     if (user == null) {
       user = createUser(comment.userInnerId);
-      this.#demoUsers[user.globalId] = user;
+      this.#demoUsers[user.innerId] = user;
       this.#updateUsers.fire("Add", toNcbUser(user));
     }
     this.#updateComments.fire("Add", toNcbComment(comment, user));
@@ -86,8 +87,10 @@ function createComment(): DemoComment {
     comment: `userId:${user.id}, name: ${user.name}`,
   };
 }
+
 const createUser = (userId: string): DemoUser => {
   const user = demoUsers.find((user) => user.id === userId);
+  assert(user != null);
   return {
     globalId: nanoid(),
     innerId: user.id,

@@ -1,24 +1,24 @@
 import React, { useEffect, useMemo } from "react";
 import ReactDOM from "react-dom";
 import { Button } from "@mui/material";
-
-import "../styles/index.css";
 import { DemoLivePlatform } from "./__demo__/DemoLivePlatform";
 import { LivePlatformManager } from "./LivePlatform/LivePlatformManager";
 import { CommentView } from "./components/CommentView";
 
+import "../styles/index.css";
+
 let auto = false;
+
 function MainConponent() {
   const demoLivePlatform = useMemo(() => new DemoLivePlatform(), []);
-  const livePlatformManager = useMemo(
-    () => new LivePlatformManager(demoLivePlatform),
-    []
-  );
+  useEffect(() => {
+    LivePlatformManager.initialize(demoLivePlatform);
+  }, []);
 
   useEffect(() => {
     setInterval(() => {
       if (auto) demoLivePlatform.newComment();
-    }, 500);
+    }, 5);
   }, [demoLivePlatform, auto]);
 
   return (
@@ -34,7 +34,7 @@ function MainConponent() {
           A
         </Button>
       </div>
-      <CommentView livePlatformManager={livePlatformManager} />
+      <CommentView className="" width={600} height={700} />
     </div>
   );
 }

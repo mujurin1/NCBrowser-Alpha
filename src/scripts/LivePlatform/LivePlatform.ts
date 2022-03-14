@@ -22,12 +22,12 @@ export interface LivePlatform {
   /** 放送の状態変更通知 */
   readonly updateLiveState: SetOnlyTrigger<[LiveState]>;
   /**
-   * コメント通知（追加・更新）\
-   * コメント通知を送信する時点で、そのコメントをしたユーザーは`updateUsers`により通知されていることは保証されている
+   * コメントが変化（追加・更新・削除）したことを通知する\
+   * 通知を送信する時点で`comment.globalUserId`のユーザーは`changeUsers`により通知されていることを保証する
    */
-  readonly updateComments: SetOnlyTrigger<[UpdateVariation, ...NcbComment[]]>;
-  /** ユーザー更新通知（追加・更新） */
-  readonly updateUsers: SetOnlyTrigger<[UpdateVariation, ...NcbUser[]]>;
+  readonly changeComments: SetOnlyTrigger<[UpdateVariation, ...NcbComment[]]>;
+  /** ユーザーが変化（追加・更新・削除）したことを通知する */
+  readonly changeUsers: SetOnlyTrigger<[UpdateVariation, ...NcbUser[]]>;
 }
 
 /**
