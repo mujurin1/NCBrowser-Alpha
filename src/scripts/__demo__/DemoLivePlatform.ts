@@ -33,7 +33,7 @@ export class DemoLivePlatform implements LivePlatform {
 
   public constructor() {}
 
-  public newComment() {
+  public newComment(): NcbComment {
     const comment = createComment();
     this.#demoComments[comment.globalId] = comment;
     let user = this.#demoUsers[comment.userInnerId];
@@ -43,6 +43,7 @@ export class DemoLivePlatform implements LivePlatform {
       this.#updateUsers.fire("Add", toNcbUser(user));
     }
     this.#updateComments.fire("Add", toNcbComment(comment, user));
+    return toNcbComment(comment, user);
   }
 }
 

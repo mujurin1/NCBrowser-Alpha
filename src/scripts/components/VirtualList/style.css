@@ -1,0 +1,32 @@
+.list-view {
+  position: relative;
+  border: 1px solid #000;
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+.list-view-scroll {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.list-view-lineup {
+  position: sticky;
+  inset: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+.list-view-row {
+  position: absolute;
+  width: 100%;
+}
+
+.list-view-row-hidden {
+  position: absolute;
+  visibility: hidden;
+}

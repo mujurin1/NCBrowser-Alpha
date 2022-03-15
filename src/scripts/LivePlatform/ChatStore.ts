@@ -1,11 +1,11 @@
 import {
   CommentCollection,
   ReadonlyCommentCollection,
-} from "../components/CommentCollection";
+} from "../common/CommentCollection";
 import {
   ReadonlyUserCollection,
   UserCollection,
-} from "../components/UserCollection";
+} from "../common/UserCollection";
 import { UpdateVariation } from "./LivePlatform";
 import { NcbComment } from "./NcbComment";
 import { NcbUser } from "./NcbUser";
