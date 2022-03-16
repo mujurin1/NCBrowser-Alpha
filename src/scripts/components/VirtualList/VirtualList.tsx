@@ -4,12 +4,9 @@ import React, {
   useRef,
   useCallback,
   useEffect,
-  useMemo,
 } from "react";
 import { Fn } from "../../types";
 import {
-  ItemLayout,
-  ListViewLayout,
   RowLayout,
   VirtualListLayoutManager,
 } from "./VirtualListLayoutManager";
@@ -21,13 +18,13 @@ export type VirtualListViewProps = {
   width: number;
   height: number;
   rowRender: Fn<[RowLayout], JSX.Element>;
-  // children: Fn<[RowLayout], JSX.Element>;
 };
 
 export function VirtualListView(props: VirtualListViewProps) {
   const layoutManager = props.layoutManager;
 
   const [layout, setLayout] = useState(layoutManager.listViewLayout);
+  const [scrollFromProgram, setScrollFromProgram] = useState(false);
 
   // レイアウトの更新
   useLayoutEffect(() => {
@@ -43,7 +40,9 @@ export function VirtualListView(props: VirtualListViewProps) {
   // レイアウトからのスクロール位置更新
   useEffect(() => {
     const handler = (scrollDif: number) => {
-      viewportRef.current?.scrollTo({ top: scrollDif });
+      if (viewportRef.current == null) return;
+      viewportRef.current.scrollTop = scrollDif;
+      setScrollFromProgram(true);
     };
 
     layoutManager.onScroll.add(handler);
@@ -59,11 +58,16 @@ export function VirtualListView(props: VirtualListViewProps) {
 
   useLayoutEffect(notifyViewPortSize, [notifyViewPortSize]);
 
-  const onScroll = useCallback(() => {
-    const viewport = viewportRef.current;
-    if (viewport === null) return;
-    layoutManager.setScrollPosition(viewport.scrollTop);
-  }, [layoutManager]);
+  const onScroll = useCallback(
+    (e: React.UIEvent<HTMLDivElement, UIEvent>) => {
+      if (!scrollFromProgram) {
+        const viewport = viewportRef.current;
+        if (viewport === null) return;
+        layoutManager.setScrollPosition(viewport.scrollTop);
+      } else setScrollFromProgram(false);
+    },
+    [layoutManager, scrollFromProgram]
+  );
 
   return (
     <div

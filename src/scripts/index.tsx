@@ -1,4 +1,4 @@
-import { Button, Input } from "@mui/material";
+import { Button, Input, Slider } from "@mui/material";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import ReactDOM from "react-dom";
 import {
@@ -23,7 +23,7 @@ setInterval(() => {
   if (auto) {
     demoPlatform.newComment();
   }
-}, 20);
+}, 1000);
 
 function LivePlatformComments() {
   const [viewHeight, setViewHeight] = useState(500);
@@ -46,7 +46,7 @@ function LivePlatformComments() {
 
   const onChangeColumn = useCallback(
     (index: number) => {
-      layoutManager.setRowHeight(index, 100);
+      layoutManager.changeRowHeight(index, 100);
     },
     [layoutManager]
   );
@@ -64,7 +64,14 @@ function LivePlatformComments() {
   return (
     <>
       <ChangeComponent onChange={(num) => onChangeColumn(num)} />
-      <ChangeComponent onChange={(num) => resize(num)} />
+      {/* <ChangeComponent onChange={(num) => resize(num)} /> */}
+      <Slider
+        min={100}
+        max={1000}
+        onChange={(e, number) => {
+          if (typeof number === "number") resize(number);
+        }}
+      />
       <ChangeComponent onChange={(_) => addComment()} />
       <VirtualListView
         layoutManager={layoutManager}
