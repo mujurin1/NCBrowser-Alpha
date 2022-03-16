@@ -1,10 +1,11 @@
 import { Button, Input } from "@mui/material";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import ReactDOM from "react-dom";
-import { VirtualListLayoutManager } from "./components/VirtualList/VirtualListLayoutManager";
+import {
+  ItemLayout,
+  VirtualListLayoutManager,
+} from "./components/VirtualList/VirtualListLayoutManager";
 import { Fn } from "./types";
-
-import "../styles/index.css";
 import { VirtualListView } from "./components/VirtualList/VirtualList";
 import { DemoLivePlatform } from "./__demo__/DemoLivePlatform";
 import { LivePlatformManager } from "./LivePlatform/LivePlatformManager";
@@ -12,16 +13,23 @@ import { ChatStore } from "./LivePlatform/ChatStore";
 import { NcbComment } from "./LivePlatform/NcbComment";
 import { UpdateVariation } from "./LivePlatform/LivePlatform";
 
+import "../styles/index.css";
+
 const demoPlatform = new DemoLivePlatform();
 LivePlatformManager.initialize(demoPlatform);
+
+let auto = false;
+setInterval(() => {
+  if (auto) {
+    demoPlatform.newComment();
+  }
+}, 20);
 
 function LivePlatformComments() {
   const [viewHeight, setViewHeight] = useState(500);
 
-  const [comments, setComments] = useState<NcbComment[]>([]);
-
   const layoutManager = useMemo(
-    () => new VirtualListLayoutManager(20, comments.length),
+    () => new VirtualListLayoutManager(20, ChatStore.comments.length),
     []
   );
 
@@ -30,12 +38,11 @@ function LivePlatformComments() {
       variation: UpdateVariation,
       ...updateComments: NcbComment[]
     ) => {
-      layoutManager.setItemCount(comments.length + updateComments.length);
-      setComments([...comments, ...updateComments]);
+      layoutManager.setRowCount(ChatStore.comments.length);
     };
     LivePlatformManager.allChangeComments.add(handler);
     return () => LivePlatformManager.allChangeComments.delete(handler);
-  }, [comments]);
+  }, [ChatStore.comments]);
 
   const onChangeColumn = useCallback(
     (index: number) => {
@@ -51,7 +58,7 @@ function LivePlatformComments() {
     [layoutManager]
   );
   const addComment = useCallback(() => {
-    demoPlatform.newComment();
+    auto = !auto;
   }, []);
 
   return (
@@ -63,77 +70,83 @@ function LivePlatformComments() {
         layoutManager={layoutManager}
         width={600}
         height={viewHeight}
-      >
-        {({ key, itemLayout: { height, index, top } }) => {
-          return (
-            <div key={key} className="list-view-row" style={{ top, height }}>
-              {`key-${key},i-${index},${comments[index].content.text}`}
-            </div>
-          );
-        }}
-      </VirtualListView>
+        rowRender={Row}
+      />
     </>
   );
 }
 
-function _TestComponent() {
-  const [viewHeight, setViewHeight] = useState(500);
+type RowProps = {
+  key: string;
+  itemLayout: ItemLayout;
+};
 
-  const items = useMemo(() => {
-    const items: string[] = [];
-    for (let i = 0; i < 0; i++) {
-      items.push(`Item-${i}`);
-    }
-    return items;
-  }, []);
-
-  const layoutManager = useMemo(
-    () => new VirtualListLayoutManager(20, items.length),
-    []
-  );
-
-  const onChangeColumn = useCallback(
-    (index: number) => {
-      layoutManager.setRowHeight(index, 100);
-    },
-    [layoutManager]
-  );
-  const resize = useCallback(
-    (height: number) => {
-      layoutManager.setViewportSize(600, height);
-      setViewHeight(height);
-    },
-    [layoutManager]
-  );
-
+function Row({ key, itemLayout: { height, index, top } }: RowProps) {
   return (
-    <>
-      <ChangeComponent onChange={(num) => onChangeColumn(num)} />
-      <ChangeComponent onChange={(num) => resize(num)} />
-      <VirtualListView
-        layoutManager={layoutManager}
-        width={600}
-        height={viewHeight}
-      >
-        {({ key, itemLayout: { height, index: itemIndex, top } }) => {
-          return (
-            <div
-              key={key}
-              className="list-view-row"
-              style={{
-                top,
-                height,
-                background: itemIndex % 2 === 1 ? "#f0f0f0" : "#ffffff",
-              }}
-            >
-              {items[itemIndex]}, DOM-{key}
-            </div>
-          );
-        }}
-      </VirtualListView>
-    </>
+    <div key={key} className="list-view-row" style={{ top, height }}>
+      {`key-${key},i-${index},${ChatStore.comments.at(index)?.content?.text}`}
+    </div>
   );
 }
+
+// function _TestComponent() {
+//   const [viewHeight, setViewHeight] = useState(500);
+
+//   const items = useMemo(() => {
+//     const items: string[] = [];
+//     for (let i = 0; i < 0; i++) {
+//       items.push(`Item-${i}`);
+//     }
+//     return items;
+//   }, []);
+
+//   const layoutManager = useMemo(
+//     () => new VirtualListLayoutManager(20, items.length),
+//     []
+//   );
+
+//   const onChangeColumn = useCallback(
+//     (index: number) => {
+//       layoutManager.setRowHeight(index, 100);
+//     },
+//     [layoutManager]
+//   );
+//   const resize = useCallback(
+//     (height: number) => {
+//       layoutManager.setViewportSize(600, height);
+//       setViewHeight(height);
+//     },
+//     [layoutManager]
+//   );
+
+//   return (
+//     <>
+//       <ChangeComponent onChange={(num) => onChangeColumn(num)} />
+//       <ChangeComponent onChange={(num) => resize(num)} />
+//       <VirtualListView
+//         layoutManager={layoutManager}
+//         width={600}
+//         height={viewHeight}
+//       >
+//         {({ key, itemLayout: { height, index: itemIndex, top } }) => {
+//           return (
+//             <div
+//               key={key}
+//               className="list-view-row"
+//               style={{
+//                 top,
+//                 height,
+//                 background: itemIndex % 2 === 1 ? "#f0f0f0" : "#ffffff",
+//               }}
+//             >
+//               {items[itemIndex]}, DOM-{key}
+//             </div>
+//           );
+//         }}
+//       </VirtualListView>
+//     </>
+//   );
+// }
 
 function ChangeComponent(props: { onChange: Fn<[number]> }) {
   const [text, setText] = useState("");

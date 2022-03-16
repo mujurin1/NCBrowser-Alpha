@@ -27,18 +27,20 @@ export type RowLayout = {
 /**
  * リストの実際に並べる行全体のレイアウト
  */
-export type LineupLayout = {
-  /** 全行の高さの合計 */
-  readonly height: number;
+export type ListViewLayout = {
+  /** スクロールするエリアの高さ */
+  readonly scrollHeight: number;
+  /** 表示する行の数 */
+  readonly visibleRowCount: number;
   /** 各行レイアウトの配列 */
-  readonly rows: RowLayout[];
+  readonly rowLayouts: RowLayout[];
 };
 
 export class VirtualListLayoutManager {
   /** リストビューの幅 */
   #viewportWidht = 0;
   /** リストビューの高さ */
-  #viewportHeihgt = 0;
+  #viewportHeight = 0;
   /** スクロール位置 */
   #scrollTop = 0;
 
@@ -46,19 +48,36 @@ export class VirtualListLayoutManager {
   #minHeight: number;
   /** アイテムのレイアウトの配列 */
   #itemLayouts: ItemLayout[] = [];
-  /** 表示する行レイアウト配列 */
-  #rowLayouts: RowLayout[] = [];
+  // /** 表示する行レイアウト配列 */
+  // #rowLayouts: RowLayout[] = [];
+  /** リストビュー全体のレイアウト */
+  #listViewLayout: ListViewLayout = {
+    scrollHeight: 0,
+    visibleRowCount: 0,
+    rowLayouts: [],
+  };
+
+  public get listViewLayout() {
+    return this.#listViewLayout;
+  }
+
+  /**
+   * 自動スクロール\
+   * 自動で`True`になる条件  一番下の行が表示される\
+   * 自動で`False`になる条件 `setScrollPosition`が呼ばれる
+   */
+  public autoScroll: boolean = true;
 
   readonly #onRecomputedLayout = new Trigger();
   readonly #onScroll = new Trigger<[number]>();
 
   /**
-   * レイアウトが変更された
+   * リストビュー全体のレイアウトが変更されたら呼ばれる
    */
   public readonly onRecomputedLayout =
     this.#onRecomputedLayout.asSetOnlyTrigger();
   /**
-   * スクロール位置が変更された
+   * スクロール位置が変更されたら呼ばれる
    */
   public readonly onScroll = this.#onScroll.asSetOnlyTrigger();
 
@@ -70,22 +89,7 @@ export class VirtualListLayoutManager {
   public constructor(minRowHeight: number, itemCount: number) {
     this.#minHeight = minRowHeight;
     this.#itemLayouts = createItemLayout(itemCount, this.#minHeight);
-    this.recomputeLayoutItems();
-  }
-
-  /**
-   * リストビューを描画するのに必要なレイアウトを返す
-   * @returns
-   */
-  public getLayout(): LineupLayout {
-    const lastItem = this.#itemLayouts.at(-1);
-    if (lastItem == null) {
-      return { height: 0, rows: this.#rowLayouts };
-    }
-    return {
-      height: lastItem.top + lastItem.height,
-      rows: this.#rowLayouts,
-    };
+    this.recomputeLayoutItems(true);
   }
 
   /**
@@ -94,11 +98,11 @@ export class VirtualListLayoutManager {
    * @param height 高さ
    */
   public setViewportSize(width: number, height: number): void {
-    if (width === this.#viewportWidht && height === this.#viewportHeihgt)
+    if (width === this.#viewportWidht && height === this.#viewportHeight)
       return;
     this.#viewportWidht = width;
-    this.#viewportHeihgt = height;
-    this.recomputeLayoutItems();
+    this.#viewportHeight = height;
+    this.recomputeLayoutItems(true);
   }
 
   /**
@@ -107,8 +111,9 @@ export class VirtualListLayoutManager {
    */
   public setScrollPosition(top: number): void {
     if (top === this.#scrollTop) return;
+    this.autoScroll = false;
     this.#scrollTop = top;
-    this.recomputeLayoutItems();
+    this.recomputeLayoutItems(false);
   }
 
   /**
@@ -118,21 +123,28 @@ export class VirtualListLayoutManager {
   public setMinRowHeight(minHeight: number) {
     if (minHeight === this.#minHeight) return;
     this.#minHeight = minHeight;
-    this.recomputeLayoutItems();
+    // ほんとに再計算する必要があるか計算するのが勿体ないくらい殆どの場合はレイアウトが変更される。
+    // が、レイアウトが変更されない場合もある
+    this.recomputeLayoutItems(false);
   }
 
   /**
-   * アイテムの数をセットする
-   * @param itemCount アイテムの数
+   * 行の数をセットする
+   * @param rowCount 行の数
    */
-  public setItemCount(itemCount: number) {
+  public setRowCount(rowCount: number) {
     this.#itemLayouts = createItemLayout(
-      itemCount,
+      rowCount,
       this.#minHeight,
       this.#itemLayouts
     );
 
-    this.recomputeLayoutItems();
+    this.recomputeLayoutItems(true);
+
+    if (this.autoScroll) {
+      this.#onScroll.fire(Number.MAX_SAFE_INTEGER);
+      // this.#onScroll.fire(lastItem.top);
+    }
   }
 
   /**
@@ -154,45 +166,85 @@ export class VirtualListLayoutManager {
       };
     }
 
-    const lastRow = this.#rowLayouts.at(0);
-    assert(lastRow != null);
-    if (itemIndex < lastRow.itemLayout.index) {
-      this.#onScroll.fire(this.#scrollTop + dif);
+    const firstRow = this.#listViewLayout.rowLayouts.at(0);
+    assert(firstRow != null);
+    if (itemIndex < firstRow.itemLayout.index) {
+      this.#scrollTop += dif;
+      // 先にレイアウト変更イベントを呼んで貰うため
+      setTimeout(() => {
+        this.#onScroll.fire(this.#scrollTop);
+      }, 0);
     }
 
-    this.recomputeLayoutItems();
+    this.recomputeLayoutItems(true);
   }
 
   /**
-   * レイアウトの再計算
+   * レイアウトを再計算する\
+   * `isEaualityLayout`が`True`の時レイアウトが変更されるかチェックする\
+   * 変更する必要が無ければレイアウトは変わらず`onRecomputedLayout`も呼ばれない
+   * @param isEaualityLayout レイアウトが同じ可能性があるか
    */
-  private recomputeLayoutItems() {
+  private recomputeLayoutItems(isEaualityLayout: boolean) {
+    const rowLayouts = this.#listViewLayout.rowLayouts;
     const linenupTop = this.#scrollTop;
-    const linenupBottom = linenupTop + this.#viewportHeihgt;
+    const linenupBottom = linenupTop + this.#viewportHeight;
 
     const indexFrom = binarySearch(this.#itemLayouts, linenupTop);
     const indexTo = binarySearch(this.#itemLayouts, linenupBottom);
+    const visibleRowCount = indexTo - indexFrom + 1;
+    const numViews = Math.max(rowLayouts.length, visibleRowCount);
 
-    const numViews = Math.max(this.#rowLayouts.length, indexTo - indexFrom + 1);
-    this.#rowLayouts = [];
+    this.autoScroll =
+      this.autoScroll || this.#itemLayouts.at(-1)?.index === indexTo;
 
-    for (let i = indexFrom; i < indexFrom + numViews; i++) {
-      if (i <= indexTo && this.#itemLayouts[i] != null) {
-        this.#rowLayouts.push({
-          key: `${i % numViews}`,
-          itemLayout: {
-            ...this.#itemLayouts[i],
-            top: this.#itemLayouts[i].top - this.#scrollTop,
-          },
-        });
-      } else {
-        this.#rowLayouts.push({
-          key: `${i % numViews}`,
-          itemLayout: { index: -1, height: 0, top: 0 },
-        });
+    // 最適化のため、レイアウトを更新するかチェック
+    if (
+      !(
+        isEaualityLayout &&
+        rowLayouts.length === numViews &&
+        rowLayouts.at(0)?.itemLayout?.index === indexFrom &&
+        this.#listViewLayout.visibleRowCount === visibleRowCount
+      )
+    ) {
+      // レイアウトを更新する
+      const rowLayouts = [];
+
+      for (let i = indexFrom; i < indexFrom + numViews; i++) {
+        if (i <= indexTo && this.#itemLayouts[i] != null) {
+          rowLayouts.push({
+            key: `${i % numViews}`,
+            itemLayout: {
+              ...this.#itemLayouts[i],
+              top: this.#itemLayouts[i].top - linenupTop,
+            },
+          });
+        } else {
+          rowLayouts.push({
+            key: `${i % numViews}`,
+            itemLayout: { index: -1, height: 0, top: 0 },
+          });
+        }
       }
+      this.#listViewLayout = {
+        ...this.#listViewLayout,
+        visibleRowCount,
+        rowLayouts,
+      };
     }
 
+    this.setScrollHeight();
+  }
+
+  /**
+   * スクロールエリアサイズを再計算し、更新を呼ぶ
+   */
+  private setScrollHeight() {
+    const lastItem = this.#itemLayouts.at(-1);
+    this.#listViewLayout = {
+      ...this.#listViewLayout,
+      scrollHeight: lastItem == null ? 0 : lastItem.top + lastItem.height,
+    };
     this.#onRecomputedLayout.fire();
   }
 }

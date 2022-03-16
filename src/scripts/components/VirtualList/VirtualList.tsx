@@ -4,30 +4,34 @@ import React, {
   useRef,
   useCallback,
   useEffect,
+  useMemo,
 } from "react";
 import { Fn } from "../../types";
 import {
+  ItemLayout,
+  ListViewLayout,
   RowLayout,
   VirtualListLayoutManager,
 } from "./VirtualListLayoutManager";
 
 import "./style.css";
 
-export interface VirtualListViewProps {
+export type VirtualListViewProps = {
   layoutManager: VirtualListLayoutManager;
   width: number;
   height: number;
-  children: Fn<[RowLayout], JSX.Element>;
-}
+  rowRender: Fn<[RowLayout], JSX.Element>;
+  // children: Fn<[RowLayout], JSX.Element>;
+};
 
 export function VirtualListView(props: VirtualListViewProps) {
   const layoutManager = props.layoutManager;
 
-  const [layout, setLayout] = useState(layoutManager.getLayout());
+  const [layout, setLayout] = useState(layoutManager.listViewLayout);
 
   // レイアウトの更新
   useLayoutEffect(() => {
-    const handler = () => setLayout(layoutManager.getLayout());
+    const handler = () => setLayout(layoutManager.listViewLayout);
     layoutManager.onRecomputedLayout.add(handler);
     return () => {
       layoutManager.onRecomputedLayout.delete(handler);
@@ -38,8 +42,9 @@ export function VirtualListView(props: VirtualListViewProps) {
 
   // レイアウトからのスクロール位置更新
   useEffect(() => {
-    const handler = (scrollDif: number) =>
+    const handler = (scrollDif: number) => {
       viewportRef.current?.scrollTo({ top: scrollDif });
+    };
 
     layoutManager.onScroll.add(handler);
     return () => layoutManager.onScroll.delete(handler);
@@ -70,19 +75,34 @@ export function VirtualListView(props: VirtualListViewProps) {
         height: props.height,
       }}
     >
-      <div className="list-view-scroll" style={{ height: layout.height }} />
+      <div
+        className="list-view-scroll"
+        style={{ height: layout.scrollHeight }}
+      />
       <div className="list-view-lineup">
-        {/* <Linenup layout={layout} items={props.items} /> */}
-        {/* {props.children({ layout, items: props.items })} */}
-        {layout.rows.map((row) => {
-          if (row.itemLayout.index === -1)
-            return <div key={row.key} style={{ visibility: "hidden" }} />;
-          else return props.children(row);
-        })}
+        <Lineup rowLayouts={layout.rowLayouts} rowRender={props.rowRender} />
       </div>
     </div>
   );
 }
+
+type LineupProps = {
+  rowLayouts: RowLayout[];
+  rowRender: Fn<[RowLayout], JSX.Element>;
+};
+
+function _Lineup(props: LineupProps) {
+  return (
+    <>
+      {props.rowLayouts.map((row) => {
+        if (row.itemLayout.index === -1)
+          return <div key={row.key} style={{ visibility: "hidden" }} />;
+        else return props.rowRender(row);
+      })}
+    </>
+  );
+}
+const Lineup = React.memo(_Lineup) as typeof _Lineup;
 
 // export function Linenup<TItem>({ layout, items }: LinenupProps<TItem>) {
 //   return (
