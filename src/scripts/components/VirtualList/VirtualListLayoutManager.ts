@@ -89,8 +89,10 @@ export class VirtualListLayoutManager {
     this.#itemLayouts = createItemLayouts(itemCount, this.#minHeight);
     this.#listViewLayout = {
       scrollHeight: 0,
-      visibleRowCount: 0,
-      rowLayouts: [],
+      visibleRowCount: 1,
+      rowLayouts: [
+        { key: "0", itemLayout: { index: -10, height: -10, top: -10 } },
+      ],
     };
 
     this.recomputeListViewLayout(true, this.autoScroll);
@@ -138,7 +140,6 @@ export class VirtualListLayoutManager {
     } else {
       if (heights == null) heights = defaultValueArray(plus, this.#minHeight);
       this.#itemLayouts = addItemLayouts(this.#itemLayouts, heights);
-      console.log(this.#itemLayouts);
     }
 
     if (this.autoScroll) {
@@ -158,6 +159,7 @@ export class VirtualListLayoutManager {
     let scrollHeightDif = 0;
     let changeMinIndex = array[0][0];
     let changeMaxIndex = changeMinIndex;
+    let recomputeFlag = false;
     // アイテムの新しい高さを設定する
     for (const [index, height] of array) {
       const layout = this.#itemLayouts[index];
@@ -167,10 +169,10 @@ export class VirtualListLayoutManager {
 
       this.#itemLayouts[index] = { ...layout, height };
       if (index < changeMinIndex) changeMinIndex = index;
-      if (index > changeMaxIndex) changeMaxIndex = index;
+      else if (index > changeMaxIndex) changeMaxIndex = index;
+      recomputeFlag = true;
     }
-
-    if (scrollHeightDif === 0) return;
+    if (!recomputeFlag) return;
 
     // アイテムの高さを再計算する
     this.#itemLayouts = recomputeTopItemLayout(
@@ -255,6 +257,8 @@ export class VirtualListLayoutManager {
     layoutMayBeSame: boolean,
     isAutoScroll?: boolean
   ) {
+    const oldVisibleRowCount = this.#listViewLayout.visibleRowCount;
+    // const listViewLayout = this.#listViewLayout;
     const rowLayouts = this.#listViewLayout.rowLayouts;
     /* AutoScroll と (first/last)RowIndex メモ
      * isAutoScroll === true
@@ -274,7 +278,7 @@ export class VirtualListLayoutManager {
     } else {
       // isAutoScroll は undefined
       // （この時、アイテムが０個の時はありえないない前提）
-      const lastVisibleRowIndex = this.#listViewLayout.visibleRowCount - 1;
+      const lastVisibleRowIndex = oldVisibleRowCount - 1;
       const lastRow = rowLayouts[lastVisibleRowIndex].itemLayout;
       const lastItem = this.#itemLayouts.at(-1)!;
       this.autoScroll = lastRow.index === lastItem.index;
@@ -306,19 +310,20 @@ export class VirtualListLayoutManager {
     const numViews = Math.max(rowLayouts.length, visibleRowCount);
     // 最適化のため、レイアウトを更新するかチェック
     if (
-      !(
-        layoutMayBeSame &&
-        rowLayouts.length === numViews &&
-        rowLayouts.at(0)?.itemLayout?.index === firstRowIndex &&
-        visibleRowCount <= this.#listViewLayout.visibleRowCount
-      )
+      layoutMayBeSame &&
+      rowLayouts.length === numViews &&
+      rowLayouts[0].itemLayout.index === firstRowIndex &&
+      rowLayouts[oldVisibleRowCount - 1].itemLayout.index === lastRowIndex &&
+      visibleRowCount <= oldVisibleRowCount
     ) {
+      // レイアウトを更新しない
+    } else {
       // レイアウトを更新する
-      const rowLayouts = [];
+      const newRowLayouts: RowLayout[] = [];
 
       for (let i = firstRowIndex; i < firstRowIndex + numViews; i++) {
         if (i <= lastRowIndex && this.#itemLayouts[i] != null) {
-          rowLayouts.push({
+          newRowLayouts.push({
             key: `${i % numViews}`,
             itemLayout: {
               ...this.#itemLayouts[i],
@@ -326,7 +331,7 @@ export class VirtualListLayoutManager {
             },
           });
         } else {
-          rowLayouts.push({
+          newRowLayouts.push({
             key: `${i % numViews}`,
             itemLayout: { index: -1, height: 0, top: 0 },
           });
@@ -335,7 +340,7 @@ export class VirtualListLayoutManager {
       this.#listViewLayout = {
         ...this.#listViewLayout,
         visibleRowCount,
-        rowLayouts,
+        rowLayouts: newRowLayouts,
       };
     }
 
@@ -382,7 +387,10 @@ function recomputeTopItemLayout(
   layouts: ItemLayout[],
   startIndex = 0
 ): ItemLayout[] {
-  let top = startIndex === 0 ? 0 : layouts[startIndex - 1].top;
+  let top =
+    startIndex === 0
+      ? 0
+      : layouts[startIndex - 1].top + layouts[startIndex - 1].height;
   for (let i = startIndex; i < layouts.length; i++) {
     layouts[i] = { ...layouts[i], top };
     top += layouts[i].height;

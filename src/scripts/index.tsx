@@ -47,10 +47,11 @@ function LivePlatformComments() {
   const onChangeColumn = useCallback(
     (index: number) => {
       layoutManager.changeRowHeight([
-        [index++, 100],
-        [index++, 100],
-        [index++, 100],
-        [index++, 100],
+        [index, 100],
+        // [index + 1, 100],
+        // [index + 2, 100],
+        // [index + 3, 100],
+        // [index + 4, 100],
       ]);
     },
     [layoutManager]
