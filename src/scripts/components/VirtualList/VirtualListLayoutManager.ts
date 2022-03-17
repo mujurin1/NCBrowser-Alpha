@@ -250,38 +250,25 @@ export class VirtualListLayoutManager {
    * レイアウトを再計算する\
    * `isCheckEaualityLayout`が`True`の時レイアウトが変更されるかチェックする\
    * 変更する必要が無ければレイアウトは変わらず`onRecomputedLayout`も呼ばれない
-   * @param layoutMayBeSame レイアウトが同じ可能性がある | 絶対同じ
-   * @param isAutoScroll 自動スクロールするか.指定しなければ状況により変わる
+   * @param layoutMayBeSame レイアウトが同じ可能性がある
+   * @param isAutoScroll 自動スクロールするか?.指定しなければ状況に自動スクロールするか計算する
    */
   private recomputeListViewLayout(
     layoutMayBeSame: boolean,
     isAutoScroll?: boolean
   ) {
     const oldVisibleRowCount = this.#listViewLayout.visibleRowCount;
-    // const listViewLayout = this.#listViewLayout;
-    const rowLayouts = this.#listViewLayout.rowLayouts;
-    /* AutoScroll と (first/last)RowIndex メモ
-     * isAutoScroll === true
-     *   一番下の行は #itemLayouts の最後の要素
-     * isAutoScroll === false
-     *   #scrollTop から計算
-     * isAutoScroll === undefined
-     *   autoScroll は
-     *   「#listViewLayout.rowLayouts の最後の行のインデックスが
-     *     #itemLayout の最後のアイテムのインデックスと同じ」
-     *   かで調べている
-     */
+    const oldRowLayouts = this.#listViewLayout.rowLayouts;
+
     if (isAutoScroll === true) {
       this.autoScroll = true;
     } else if (isAutoScroll === false) {
       this.autoScroll = false;
     } else {
-      // isAutoScroll は undefined
-      // （この時、アイテムが０個の時はありえないない前提）
-      const lastVisibleRowIndex = oldVisibleRowCount - 1;
-      const lastRow = rowLayouts[lastVisibleRowIndex].itemLayout;
       const lastItem = this.#itemLayouts.at(-1)!;
-      this.autoScroll = lastRow.index === lastItem.index;
+      this.autoScroll =
+        lastItem.top + lastItem.height - this.#viewportHeight <=
+        this.#scrollTop;
     }
 
     let firstRowIndex;
@@ -307,13 +294,13 @@ export class VirtualListLayoutManager {
     }
 
     const visibleRowCount = lastRowIndex - firstRowIndex + 1;
-    const numViews = Math.max(rowLayouts.length, visibleRowCount);
+    const numViews = Math.max(oldRowLayouts.length, visibleRowCount);
     // 最適化のため、レイアウトを更新するかチェック
     if (
       layoutMayBeSame &&
-      rowLayouts.length === numViews &&
-      rowLayouts[0].itemLayout.index === firstRowIndex &&
-      rowLayouts[oldVisibleRowCount - 1].itemLayout.index === lastRowIndex &&
+      oldRowLayouts.length === numViews &&
+      oldRowLayouts[0].itemLayout.index === firstRowIndex &&
+      oldRowLayouts[oldVisibleRowCount - 1].itemLayout.index === lastRowIndex &&
       visibleRowCount <= oldVisibleRowCount
     ) {
       // レイアウトを更新しない
@@ -345,7 +332,10 @@ export class VirtualListLayoutManager {
     }
 
     this.setScrollHeight();
-    if (this.autoScroll) this.#onScroll.fire(this.#scrollTop);
+
+    if (this.autoScroll) {
+      this.#onScroll.fire(this.#scrollTop);
+    }
   }
 
   /**
