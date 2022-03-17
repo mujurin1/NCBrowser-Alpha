@@ -47,11 +47,11 @@ export class LivePlatformManager {
       platform.updateLiveState.add((state) => {
         LivePlatformManager.#allUpdateLiveState.fire(state);
       });
-      platform.changeUsers.add((valiation, user) =>
-        LivePlatformManager.#allChangeUsers.fire(valiation, user)
+      platform.changeUsers.add((valiation, ...users) =>
+        LivePlatformManager.#allChangeUsers.fire(valiation, ...users)
       );
-      platform.changeComments.add((valiation, comment) => {
-        LivePlatformManager.#allChangeComments.fire(valiation, comment);
+      platform.changeComments.add((valiation, ...comments) => {
+        LivePlatformManager.#allChangeComments.fire(valiation, ...comments);
       });
     });
   }

@@ -53,7 +53,7 @@ export function VirtualListView(props: VirtualListViewProps) {
   const notifyViewPortSize = useCallback(() => {
     const viewport = viewportRef.current;
     if (viewport === null) return;
-    layoutManager.setViewportSize(viewport.clientWidth, viewport.clientHeight);
+    layoutManager.setViewportHeight(viewport.clientHeight);
   }, [layoutManager]);
 
   useLayoutEffect(notifyViewPortSize, [notifyViewPortSize]);

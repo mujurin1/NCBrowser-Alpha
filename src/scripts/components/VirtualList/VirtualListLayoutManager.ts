@@ -1,9 +1,14 @@
-import { minHeight } from "@mui/system";
 import { Trigger } from "../../common/Trigger";
-import { assert } from "../../utils/util";
+import { assert, defaultValueArray } from "../../utils/util";
+
+/* ListView 表示されるビュー
+ * Row      リストの行
+ * Item     リストの要素。アイテム
+ *
+ */
 
 /**
- * リストに表示する要素のレイアウト
+ * リストに表示する要素。アイテムのレイアウト
  */
 export type ItemLayout = {
   /** アイテムのインデックス */
@@ -15,7 +20,7 @@ export type ItemLayout = {
 };
 
 /**
- * 実際に並べる行のレイアウト
+ * 実際に表示する並べる行のレイアウト
  */
 export type RowLayout = {
   /** 行のキー */
@@ -25,7 +30,7 @@ export type RowLayout = {
 };
 
 /**
- * リストの実際に並べる行全体のレイアウト
+ * リストビュー
  */
 export type ListViewLayout = {
   /** スクロールするエリアの高さ */
@@ -37,8 +42,6 @@ export type ListViewLayout = {
 };
 
 export class VirtualListLayoutManager {
-  /** リストビューの幅 */
-  #viewportWidht = 0;
   /** リストビューの高さ */
   #viewportHeight = 0;
   /** スクロール位置 */
@@ -51,6 +54,7 @@ export class VirtualListLayoutManager {
   /** リストビュー全体のレイアウト */
   #listViewLayout: ListViewLayout;
 
+  /** リストビュー全体のレイアウト */
   public get listViewLayout() {
     return this.#listViewLayout;
   }
@@ -82,32 +86,29 @@ export class VirtualListLayoutManager {
    */
   public constructor(minRowHeight: number, itemCount: number) {
     this.#minHeight = minRowHeight;
-    this.#itemLayouts = createItemLayout(itemCount, this.#minHeight);
+    this.#itemLayouts = createItemLayouts(itemCount, this.#minHeight);
     this.#listViewLayout = {
       scrollHeight: 0,
       visibleRowCount: 0,
       rowLayouts: [],
     };
 
-    this.recomputeLayoutItems(true, this.autoScroll);
+    this.recomputeListViewLayout(true, this.autoScroll);
   }
 
   /**
-   * リストビューのサイズを変更する
-   * @param width 幅
+   * リストビューの高さを変更する
    * @param height 高さ
    */
-  public setViewportSize(width: number, height: number): void {
-    if (width === this.#viewportWidht && height === this.#viewportHeight)
-      return;
+  public setViewportHeight(height: number): void {
+    if (height === this.#viewportHeight) return;
     const dif = height - this.#viewportHeight;
-    this.#viewportWidht = width;
     this.#viewportHeight = height;
 
     this.#scrollTop -= dif;
     if (this.#scrollTop < 0) this.#scrollTop = 0;
 
-    this.recomputeLayoutItems(false, this.autoScroll);
+    this.recomputeListViewLayout(false, this.autoScroll);
   }
 
   /**
@@ -120,73 +121,74 @@ export class VirtualListLayoutManager {
     const scrollUp = this.#scrollTop > top;
 
     this.#scrollTop = top;
-    this.recomputeLayoutItems(false, scrollUp ? false : undefined);
+    this.recomputeListViewLayout(false, scrollUp ? false : undefined);
   }
 
   /**
-   * 行の高さの最小値をセットする
-   * @param minHeight 最小の高さ
+   * 新しい行の数をセットする
+   * @param rowCount 新しい行の数
+   * @param heights 行の幅.指定しないと minHeight でされる
    */
-  public setMinRowHeight(minHeight: number) {
-    if (minHeight === this.#minHeight) return;
-    this.#minHeight = minHeight;
-    // レイアウトが変更されない場合もあるが、
-    // ほんとに再計算する必要があるか計算するのが勿体ないくらい殆どの場合はレイアウトが変更される
-    this.recomputeLayoutItems(false);
-  }
-
-  /**
-   * 行の数をセットする\
-   * 減らすことはできない
-   * @param rowCount 行の数
-   */
-  public setRowCount(rowCount: number) {
+  public setRowCount(rowCount: number, heights?: number[]) {
     const plus = rowCount - this.#itemLayouts.length;
-    this.#itemLayouts = createItemLayout(
-      rowCount,
-      this.#minHeight,
-      this.#itemLayouts
-    );
+    if (plus === 0) return;
+    if (plus < 0) {
+      heights = [];
+      this.#itemLayouts = this.#itemLayouts.splice(0, rowCount);
+    } else {
+      if (heights == null) heights = defaultValueArray(plus, this.#minHeight);
+      this.#itemLayouts = addItemLayouts(this.#itemLayouts, heights);
+      console.log(this.#itemLayouts);
+    }
 
     if (this.autoScroll) {
       this.#scrollTop += plus * this.#minHeight;
+      // if (this.#scrollTop < 0) this.#scrollTop = 0;
     }
-    this.recomputeLayoutItems(true, this.autoScroll);
+    this.recomputeListViewLayout(true, this.autoScroll);
   }
 
   /**
-   * 指定アイテム行の高さを変更する\
-   * 画面外のアイテムの高さが変わる可能性は無いとする
-   * @param itemIndex セットするアイテムのインデックス
-   * @param height 高さ
+   * 指定アイテム行の高さを変更する
+   * @param array [変更するインデックス, 新しい高さ][]
    */
-  public changeRowHeight(itemIndex: number, height: number): void {
-    const dif = height - this.#itemLayouts[itemIndex].height;
-    if (dif === 0) return;
+  public changeRowHeight(array: [number, number][]): void {
+    if (array.length === 0) return;
 
-    this.#itemLayouts[itemIndex] = {
-      ...this.#itemLayouts[itemIndex],
-      height,
-    };
-    for (let i = itemIndex + 1; i < this.#itemLayouts.length; i++) {
-      this.#itemLayouts[i] = {
-        ...this.#itemLayouts[i],
-        top: this.#itemLayouts[i].top + dif,
-      };
+    let scrollHeightDif = 0;
+    let changeMinIndex = array[0][0];
+    let changeMaxIndex = changeMinIndex;
+    // アイテムの新しい高さを設定する
+    for (const [index, height] of array) {
+      const layout = this.#itemLayouts[index];
+      const dif = height - layout.height;
+      if (dif === 0) continue;
+      scrollHeightDif += dif;
+
+      this.#itemLayouts[index] = { ...layout, height };
+      if (index < changeMinIndex) changeMinIndex = index;
+      if (index > changeMaxIndex) changeMaxIndex = index;
     }
 
-    let layoutMayBeSame = false;
+    if (scrollHeightDif === 0) return;
 
-    // 画面外のアイテムの高さが変わる可能性があるコード
-    // 今表示している最下行より上のエリアが変更された
+    // アイテムの高さを再計算する
+    this.#itemLayouts = recomputeTopItemLayout(
+      this.#itemLayouts,
+      changeMinIndex
+    );
+
+    // スクロール計算
     const firstRowItem = this.#listViewLayout.rowLayouts.at(0)?.itemLayout;
     const lastRowItem = this.#listViewLayout.rowLayouts.at(-1)?.itemLayout;
     assert(firstRowItem != null && lastRowItem != null);
-    if (itemIndex < firstRowItem.index) {
-      this.#scrollTop += dif;
+
+    let layoutMayBeSame = false;
+    if (changeMinIndex < firstRowItem.index) {
+      this.#scrollTop += scrollHeightDif;
       layoutMayBeSame = true;
-    } else if (itemIndex < lastRowItem.index) {
-      this.#scrollTop += dif;
+    } else if (changeMaxIndex < lastRowItem.index) {
+      this.#scrollTop += scrollHeightDif;
       // 先にレイアウト変更イベントを呼んで貰うため
       setTimeout(() => {
         this.#onScroll.fire(this.#scrollTop);
@@ -194,8 +196,48 @@ export class VirtualListLayoutManager {
     } else {
       layoutMayBeSame = true;
     }
+
+    // リストビューレイアウト計算
     // MEMO: layoutMayBeSame が true なら絶対変わらない
-    this.recomputeLayoutItems(layoutMayBeSame);
+    this.recomputeListViewLayout(layoutMayBeSame);
+
+    // リストビューのレイアウトを再計算する
+
+    // const dif = height - this.#itemLayouts[itemIndex].height;
+    // if (dif === 0) return;
+
+    // this.#itemLayouts[itemIndex] = {
+    //   ...this.#itemLayouts[itemIndex],
+    //   height,
+    // };
+    // for (let i = itemIndex + 1; i < this.#itemLayouts.length; i++) {
+    //   this.#itemLayouts[i] = {
+    //     ...this.#itemLayouts[i],
+    //     top: this.#itemLayouts[i].top + dif,
+    //   };
+    // }
+
+    // let layoutMayBeSame = false;
+
+    // // 画面外のアイテムの高さが変わる可能性があるコード
+    // // 今表示している最下行より上のエリアが変更された
+    // const firstRowItem = this.#listViewLayout.rowLayouts.at(0)?.itemLayout;
+    // const lastRowItem = this.#listViewLayout.rowLayouts.at(-1)?.itemLayout;
+    // assert(firstRowItem != null && lastRowItem != null);
+    // if (itemIndex < firstRowItem.index) {
+    //   this.#scrollTop += dif;
+    //   layoutMayBeSame = true;
+    // } else if (itemIndex < lastRowItem.index) {
+    //   this.#scrollTop += dif;
+    //   // 先にレイアウト変更イベントを呼んで貰うため
+    //   setTimeout(() => {
+    //     this.#onScroll.fire(this.#scrollTop);
+    //   }, 0);
+    // } else {
+    //   layoutMayBeSame = true;
+    // }
+    // // MEMO: layoutMayBeSame が true なら絶対変わらない
+    // this.recomputeLayoutItems(layoutMayBeSame);
   }
 
   /**
@@ -205,7 +247,7 @@ export class VirtualListLayoutManager {
    * @param layoutMayBeSame レイアウトが同じ可能性がある | 絶対同じ
    * @param isAutoScroll 自動スクロールするか.指定しなければ状況により変わる
    */
-  private recomputeLayoutItems(
+  private recomputeListViewLayout(
     layoutMayBeSame: boolean,
     isAutoScroll?: boolean
   ) {
@@ -258,7 +300,6 @@ export class VirtualListLayoutManager {
 
     const visibleRowCount = lastRowIndex - firstRowIndex + 1;
     const numViews = Math.max(rowLayouts.length, visibleRowCount);
-
     // 最適化のため、レイアウトを更新するかチェック
     if (
       !(
@@ -312,37 +353,60 @@ export class VirtualListLayoutManager {
 }
 
 /**
- * アイテムのレイアウトを生成する\
- * すでにあるレイアウトに追加で生成もできる
+ * アイテムのレイアウトを生成する
  * @param itemCount アイテムの数
  * @param height 高さ
- * @param layouts 指定するとすでにあるレイアウトの続きから生成する
  */
-function createItemLayout(
-  itemCount: number,
-  height: number,
-  layouts?: ItemLayout[]
-): ItemLayout[] {
-  let itemLayouts: ItemLayout[];
+function createItemLayouts(itemCount: number, height: number): ItemLayout[] {
+  const layouts: ItemLayout[] = [];
   let top = 0;
 
-  if (layouts == null || layouts.length == 0) {
-    itemLayouts = [];
-  } else if (itemCount < layouts.length) {
-    return layouts.splice(0, itemCount);
-  } else {
-    itemLayouts = layouts;
-    const lastItem = itemLayouts.at(-1);
-    assert(lastItem != null);
-    top = lastItem.top + height;
-  }
-
-  for (let i = itemLayouts.length; i < itemCount; i++) {
-    itemLayouts[i] = { index: i, height, top };
+  for (let i = layouts.length; i < itemCount; i++) {
+    layouts[i] = { index: i, height, top };
     top += height;
   }
 
-  return itemLayouts;
+  return layouts;
+}
+
+/**
+ * アイテムのレイアウトの開始位置を再計算する
+ * @param layouts 元となるレイアウト
+ * @param startIndex 計算を開始するインデックス。default 0
+ */
+function recomputeTopItemLayout(
+  layouts: ItemLayout[],
+  startIndex = 0
+): ItemLayout[] {
+  let top = startIndex === 0 ? 0 : layouts[startIndex - 1].top;
+  for (let i = startIndex; i < layouts.length; i++) {
+    layouts[i] = { ...layouts[i], top };
+    top += layouts[i].height;
+  }
+  return layouts;
+}
+
+/**
+ * 渡されたアイテムのレイアウトに新しい行を追加して再計算する
+ * @param layouts 元となるレイアウト
+ * @param heights 追加する行の高さの配列
+ */
+function addItemLayouts(
+  layouts: ItemLayout[],
+  heights: number[]
+): ItemLayout[] {
+  if (heights.length === 0) return layouts;
+
+  let top = 0;
+  const lastItem = layouts.at(-1);
+  if (lastItem != null) top = lastItem.top + lastItem.height;
+  const bottom = layouts.length;
+  for (let i = 0; i < heights.length; i++) {
+    layouts.push({ index: bottom + i, height: heights[i], top });
+    top += heights[i];
+  }
+
+  return layouts;
 }
 
 /**

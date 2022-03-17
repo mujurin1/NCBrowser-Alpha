@@ -45,6 +45,26 @@ export class DemoLivePlatform implements LivePlatform {
     this.#updateComments.fire("Add", toNcbComment(comment, user));
     return toNcbComment(comment, user);
   }
+  public newComments(): NcbComment[] {
+    const plus = 5;
+    const comments: NcbComment[] = [];
+    const users: NcbUser[] = [];
+    for (let i = 0; i < plus; i++) {
+      const comment = createComment();
+      this.#demoComments[comment.globalId] = comment;
+
+      let user = this.#demoUsers[comment.userInnerId];
+      if (user == null) {
+        user = createUser(comment.userInnerId);
+        this.#demoUsers[user.innerId] = user;
+        users.push(toNcbUser(user));
+      }
+      comments.push(toNcbComment(comment, user));
+    }
+    if (users.length > 0) this.#updateUsers.fire("Add", ...users);
+    this.#updateComments.fire("Add", ...comments);
+    return comments;
+  }
 }
 
 type DemoUser = {

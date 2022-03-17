@@ -21,9 +21,9 @@ LivePlatformManager.initialize(demoPlatform);
 let auto = false;
 setInterval(() => {
   if (auto) {
-    demoPlatform.newComment();
+    demoPlatform.newComments();
   }
-}, 1000);
+}, 500);
 
 function LivePlatformComments() {
   const [viewHeight, setViewHeight] = useState(500);
@@ -46,13 +46,13 @@ function LivePlatformComments() {
 
   const onChangeColumn = useCallback(
     (index: number) => {
-      layoutManager.changeRowHeight(index, 100);
+      layoutManager.changeRowHeight([[index, 100]]);
     },
     [layoutManager]
   );
   const resize = useCallback(
     (height: number) => {
-      layoutManager.setViewportSize(600, height);
+      layoutManager.setViewportHeight(height);
       setViewHeight(height);
     },
     [layoutManager]
