@@ -45,8 +45,7 @@ export class DemoLivePlatform implements LivePlatform {
     this.#updateComments.fire("Add", toNcbComment(comment, user));
     return toNcbComment(comment, user);
   }
-  public newComments(): NcbComment[] {
-    const plus = 5;
+  public newComments(plus: number): NcbComment[] {
     const comments: NcbComment[] = [];
     const users: NcbUser[] = [];
     for (let i = 0; i < plus; i++) {

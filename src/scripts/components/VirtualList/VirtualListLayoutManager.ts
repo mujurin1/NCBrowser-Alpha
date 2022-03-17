@@ -187,6 +187,10 @@ export class VirtualListLayoutManager {
     if (changeMinIndex < firstRowItem.index) {
       this.#scrollTop += scrollHeightDif;
       layoutMayBeSame = true;
+      // 先にレイアウト変更イベントを呼んで貰うため
+      setTimeout(() => {
+        this.#onScroll.fire(this.#scrollTop);
+      }, 0);
     } else if (changeMaxIndex < lastRowItem.index) {
       this.#scrollTop += scrollHeightDif;
       // 先にレイアウト変更イベントを呼んで貰うため
