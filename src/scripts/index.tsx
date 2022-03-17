@@ -6,7 +6,10 @@ import {
   VirtualListLayoutManager,
 } from "./components/VirtualList/VirtualListLayoutManager";
 import { Fn } from "./types";
-import { VirtualListView } from "./components/VirtualList/VirtualList";
+import {
+  RowRenderProps,
+  VirtualListView,
+} from "./components/VirtualList/VirtualList";
 import { DemoLivePlatform } from "./__demo__/DemoLivePlatform";
 import { LivePlatformManager } from "./LivePlatform/LivePlatformManager";
 import { ChatStore } from "./LivePlatform/ChatStore";
@@ -23,7 +26,7 @@ setInterval(() => {
   if (auto) {
     demoPlatform.newComments(10);
   }
-}, 1000);
+}, 20);
 
 function LivePlatformComments() {
   const [viewHeight, setViewHeight] = useState(500);
@@ -89,14 +92,14 @@ function LivePlatformComments() {
   );
 }
 
-type RowProps = {
-  key: string;
-  itemLayout: ItemLayout;
-};
+function Row({ rowLayout }: RowRenderProps) {
+  const {
+    key,
+    itemLayout: { height, index, top },
+  } = rowLayout;
 
-function Row({ key, itemLayout: { height, index, top } }: RowProps) {
   return (
-    <div key={key} className="list-view-row" style={{ top, height }}>
+    <div key={key} className="list-view-row" style={{ top, minHeight: height }}>
       {`key-${key},i-${index},${ChatStore.comments.at(index)?.content?.text}`}
     </div>
   );

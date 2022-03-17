@@ -123,6 +123,7 @@ export class VirtualListLayoutManager {
     const scrollUp = this.#scrollTop > top;
 
     this.#scrollTop = top;
+
     this.recomputeListViewLayout(false, scrollUp ? false : undefined);
   }
 
@@ -144,7 +145,6 @@ export class VirtualListLayoutManager {
 
     if (this.autoScroll) {
       this.#scrollTop += plus * this.#minHeight;
-      // if (this.#scrollTop < 0) this.#scrollTop = 0;
     }
     this.recomputeListViewLayout(true, this.autoScroll);
   }
@@ -154,7 +154,14 @@ export class VirtualListLayoutManager {
    * @param array [変更するインデックス, 新しい高さ][]
    */
   public changeRowHeight(array: [number, number][]): void {
-    if (array.length === 0) return;
+    if (
+      array.length === 0 ||
+      array[0][0] === -1 ||
+      array.every(
+        ([index, height]) => this.#itemLayouts[index]?.height === height
+      )
+    )
+      return;
 
     let scrollHeightDif = 0;
     let changeMinIndex = array[0][0];
@@ -181,69 +188,29 @@ export class VirtualListLayoutManager {
     );
 
     // スクロール計算
-    const firstRowItem = this.#listViewLayout.rowLayouts.at(0)?.itemLayout;
-    const lastRowItem = this.#listViewLayout.rowLayouts.at(-1)?.itemLayout;
+    const firstRowItem = this.#listViewLayout.rowLayouts[0].itemLayout;
+    const lastRowItem =
+      this.#listViewLayout.rowLayouts[this.#listViewLayout.visibleRowCount - 1]
+        .itemLayout;
     assert(firstRowItem != null && lastRowItem != null);
 
     let layoutMayBeSame = false;
-    if (changeMinIndex < firstRowItem.index) {
-      this.#scrollTop += scrollHeightDif;
+    // スクロールの計算
+    if (changeMinIndex <= lastRowItem.index) {
+      // 変更するアイテムは表示する行より上
       layoutMayBeSame = true;
-      // 先にレイアウト変更イベントを呼んで貰うため
-      setTimeout(() => {
-        this.#onScroll.fire(this.#scrollTop);
-      }, 0);
-    } else if (changeMaxIndex < lastRowItem.index) {
       this.#scrollTop += scrollHeightDif;
       // 先にレイアウト変更イベントを呼んで貰うため
       setTimeout(() => {
         this.#onScroll.fire(this.#scrollTop);
       }, 0);
-    } else {
-      layoutMayBeSame = true;
+      // layoutMayBeSame をより正確に計算するだけ
+      layoutMayBeSame = changeMaxIndex < firstRowItem.index;
     }
 
     // リストビューレイアウト計算
     // MEMO: layoutMayBeSame が true なら絶対変わらない
-    this.recomputeListViewLayout(layoutMayBeSame);
-
-    // リストビューのレイアウトを再計算する
-
-    // const dif = height - this.#itemLayouts[itemIndex].height;
-    // if (dif === 0) return;
-
-    // this.#itemLayouts[itemIndex] = {
-    //   ...this.#itemLayouts[itemIndex],
-    //   height,
-    // };
-    // for (let i = itemIndex + 1; i < this.#itemLayouts.length; i++) {
-    //   this.#itemLayouts[i] = {
-    //     ...this.#itemLayouts[i],
-    //     top: this.#itemLayouts[i].top + dif,
-    //   };
-    // }
-
-    // let layoutMayBeSame = false;
-
-    // // 画面外のアイテムの高さが変わる可能性があるコード
-    // // 今表示している最下行より上のエリアが変更された
-    // const firstRowItem = this.#listViewLayout.rowLayouts.at(0)?.itemLayout;
-    // const lastRowItem = this.#listViewLayout.rowLayouts.at(-1)?.itemLayout;
-    // assert(firstRowItem != null && lastRowItem != null);
-    // if (itemIndex < firstRowItem.index) {
-    //   this.#scrollTop += dif;
-    //   layoutMayBeSame = true;
-    // } else if (itemIndex < lastRowItem.index) {
-    //   this.#scrollTop += dif;
-    //   // 先にレイアウト変更イベントを呼んで貰うため
-    //   setTimeout(() => {
-    //     this.#onScroll.fire(this.#scrollTop);
-    //   }, 0);
-    // } else {
-    //   layoutMayBeSame = true;
-    // }
-    // // MEMO: layoutMayBeSame が true なら絶対変わらない
-    // this.recomputeLayoutItems(layoutMayBeSame);
+    this.recomputeListViewLayout(layoutMayBeSame, undefined);
   }
 
   /**

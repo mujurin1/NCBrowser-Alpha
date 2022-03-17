@@ -13,11 +13,16 @@ import {
 
 import "./style.css";
 
+export type RowRenderProps = {
+  /** 表示する行のレイアウト */
+  rowLayout: RowLayout;
+};
+
 export type VirtualListViewProps = {
   layoutManager: VirtualListLayoutManager;
   width: number;
   height: number;
-  rowRender: Fn<[RowLayout], JSX.Element>;
+  rowRender: Fn<[RowRenderProps], JSX.Element>;
 };
 
 export function VirtualListView(props: VirtualListViewProps) {
@@ -40,8 +45,9 @@ export function VirtualListView(props: VirtualListViewProps) {
   // レイアウトからのスクロール位置更新
   useEffect(() => {
     const handler = (scrollDif: number) => {
-      if (viewportRef.current == null) return;
-      viewportRef.current.scrollTop = scrollDif;
+      const viewport = viewportRef.current;
+      if (viewport === null) return;
+      viewport.scrollTop = scrollDif;
       setScrollFromProgram(true);
     };
 
@@ -63,6 +69,7 @@ export function VirtualListView(props: VirtualListViewProps) {
       if (!scrollFromProgram) {
         const viewport = viewportRef.current;
         if (viewport === null) return;
+
         layoutManager.setScrollPosition(viewport.scrollTop);
       } else setScrollFromProgram(false);
     },
@@ -83,27 +90,53 @@ export function VirtualListView(props: VirtualListViewProps) {
         className="list-view-scroll"
         style={{ height: layout.scrollHeight }}
       />
-      <div className="list-view-lineup">
-        <Lineup rowLayouts={layout.rowLayouts} rowRender={props.rowRender} />
-      </div>
+      <Lineup
+        layoutManager={layoutManager}
+        rowLayouts={layout.rowLayouts}
+        rowRender={props.rowRender}
+      />
     </div>
   );
 }
 
 type LineupProps = {
+  layoutManager: VirtualListLayoutManager;
   rowLayouts: RowLayout[];
-  rowRender: Fn<[RowLayout], JSX.Element>;
+  rowRender: Fn<[RowRenderProps], JSX.Element>;
 };
 
 function _Lineup(props: LineupProps) {
+  const layoutManager = props.layoutManager;
+  const linenupRef = useRef<HTMLDivElement | null>(null);
+
+  useLayoutEffect(() => {
+    const lineup = linenupRef.current;
+    if (lineup === null || layoutManager.listViewLayout.visibleRowCount === 0)
+      return;
+
+    const newValues: [number, number][] = [];
+    for (let i = 0; i < layoutManager.listViewLayout.visibleRowCount; i++) {
+      const child = lineup.children[i];
+      // console.log(
+      //   props.layoutManager.listViewLayout.rowLayouts[0].itemLayout.index + i,
+      //   child.clientHeight
+      //   );
+      newValues.push([
+        layoutManager.listViewLayout.rowLayouts[0].itemLayout.index + i,
+        child.clientHeight,
+      ]);
+    }
+    layoutManager.changeRowHeight(newValues);
+  }, [linenupRef, props.rowLayouts]);
+
   return (
-    <>
-      {props.rowLayouts.map((row) => {
-        if (row.itemLayout.index === -1)
-          return <div key={row.key} style={{ visibility: "hidden" }} />;
-        else return props.rowRender(row);
+    <div ref={linenupRef} className="list-view-lineup">
+      {props.rowLayouts.map((rowLayout) => {
+        if (rowLayout.itemLayout.index === -1)
+          return <div key={rowLayout.key} style={{ visibility: "hidden" }} />;
+        else return props.rowRender({ rowLayout });
       })}
-    </>
+    </div>
   );
 }
 const Lineup = React.memo(_Lineup) as typeof _Lineup;
