@@ -30,6 +30,11 @@ export function VirtualListView(props: VirtualListViewProps) {
 
   const [layout, setLayout] = useState(layoutManager.listViewLayout);
 
+  // レイアウトの初期化
+  useEffect(() => {
+    layoutManager.setViewportHeight(props.height);
+  }, [layoutManager, props.height]);
+
   // レイアウトの更新
   useLayoutEffect(() => {
     const handler = () => setLayout(layoutManager.listViewLayout);
@@ -53,40 +58,21 @@ export function VirtualListView(props: VirtualListViewProps) {
     return () => layoutManager.onScroll.delete(handler);
   }, [viewportRef]);
 
-  // レイアウトサイズのセット
-  const notifyViewPortSize = useCallback(() => {
-    const viewport = viewportRef.current;
-    if (viewport === null) return;
-    layoutManager.setViewportHeight(viewport.clientHeight);
-  }, [layoutManager]);
-
-  useLayoutEffect(notifyViewPortSize, [notifyViewPortSize]);
-
   const onScroll = useCallback(
     (e: React.UIEvent<HTMLDivElement, UIEvent>) => {
       const viewport = viewportRef.current;
-      if (viewport === null) return;
-      // console.log(e);
-      if (viewport.scrollTop !== layoutManager.scrollTop) {
-        console.log("user");
-
-        layoutManager.setScrollPosition(viewport.scrollTop);
-      } else console.log("program");
-
-      // if (!scrollFromProgram) {
-      //   layoutManager.setScrollPosition(viewport.scrollTop);
-      // } else setScrollFromProgram(false);
+      if (viewport === null || viewport.scrollTop === layoutManager.scrollTop)
+        return;
+      layoutManager.setScrollPosition(viewport.scrollTop);
     },
-    [layoutManager]
+    [layoutManager, viewportRef]
   );
 
   return (
     <div
       ref={viewportRef}
       className="list-view"
-      onScroll={(e) => {
-        onScroll(e);
-      }}
+      onScroll={onScroll}
       style={{
         width: props.width,
         height: props.height,
@@ -104,21 +90,6 @@ export function VirtualListView(props: VirtualListViewProps) {
     </div>
   );
 }
-
-const scrollEvent = (
-  e: React.UIEvent<HTMLDivElement, UIEvent>,
-  layoutManager: VirtualListLayoutManager,
-  viewport: HTMLDivElement,
-  scrollFromProgram: boolean
-) => {
-  if (!scrollFromProgram) {
-    console.log("scroll from ", scrollFromProgram ? "program" : "user");
-    if (viewport === null) return;
-
-    layoutManager.setScrollPosition(viewport.scrollTop);
-  }
-  //  } else setScrollFromProgram(false);
-};
 
 type LineupProps = {
   layoutManager: VirtualListLayoutManager;

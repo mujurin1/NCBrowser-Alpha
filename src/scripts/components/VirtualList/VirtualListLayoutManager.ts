@@ -46,9 +46,12 @@ export class VirtualListLayoutManager {
   #viewportHeight = 0;
   /** スクロール位置 */
   #scrollTop = 0;
+  /** スクロール位置 */
   public get scrollTop() {
     return this.#scrollTop;
   }
+  /** 自動スクロール */
+  #autoScroll: boolean = true;
 
   /** 行の最小幅.デフォルトの高さとしても利用する */
   #minHeight: number;
@@ -56,31 +59,22 @@ export class VirtualListLayoutManager {
   #itemLayouts: ItemLayout[] = [];
   /** リストビュー全体のレイアウト */
   #listViewLayout: ListViewLayout;
-
   /** リストビュー全体のレイアウト */
   public get listViewLayout() {
     return this.#listViewLayout;
   }
 
-  /**
-   * 自動スクロール\
-   * 自動で`True`になる条件  一番下の行が表示される\
-   * 自動で`False`になる条件 `setScrollPosition`が呼ばれる
-   */
-  public autoScroll: boolean = true;
-
-  readonly #onRecomputedLayout = new Trigger();
   readonly #onScroll = new Trigger<[number]>();
-
+  /**
+   * スクロール位置が変更されたら呼ばれる
+   */
+  public readonly onScroll = this.#onScroll.asSetOnlyTrigger();
+  readonly #onRecomputedLayout = new Trigger();
   /**
    * リストビュー全体のレイアウトが変更されたら呼ばれる
    */
   public readonly onRecomputedLayout =
     this.#onRecomputedLayout.asSetOnlyTrigger();
-  /**
-   * スクロール位置が変更されたら呼ばれる
-   */
-  public readonly onScroll = this.#onScroll.asSetOnlyTrigger();
 
   /**
    * コンストラクタ
@@ -98,7 +92,7 @@ export class VirtualListLayoutManager {
       ],
     };
 
-    this.recomputeListViewLayout(true, this.autoScroll);
+    this.recomputeListViewLayout(true, this.#autoScroll);
   }
 
   /**
@@ -113,7 +107,7 @@ export class VirtualListLayoutManager {
     this.#scrollTop -= dif;
     if (this.#scrollTop < 0) this.#scrollTop = 0;
 
-    this.recomputeListViewLayout(false, this.autoScroll);
+    this.recomputeListViewLayout(false, this.#autoScroll);
   }
 
   /**
@@ -146,10 +140,10 @@ export class VirtualListLayoutManager {
       this.#itemLayouts = addItemLayouts(this.#itemLayouts, heights);
     }
 
-    if (this.autoScroll) {
+    if (this.#autoScroll) {
       this.#scrollTop += plus * this.#minHeight;
     }
-    this.recomputeListViewLayout(true, this.autoScroll);
+    this.recomputeListViewLayout(true, this.#autoScroll);
   }
 
   /**
@@ -169,7 +163,6 @@ export class VirtualListLayoutManager {
     let scrollHeightDif = 0;
     let changeMinIndex = Number.MAX_SAFE_INTEGER;
     let changeMaxIndex = Number.MIN_SAFE_INTEGER;
-    let recomputeFlag = false;
     // アイテムの新しい高さを設定する
     for (const [index, height] of array) {
       const layout = this.#itemLayouts[index];
@@ -180,9 +173,8 @@ export class VirtualListLayoutManager {
       this.#itemLayouts[index] = { ...layout, height };
       if (index < changeMinIndex) changeMinIndex = index;
       if (index > changeMaxIndex) changeMaxIndex = index;
-      recomputeFlag = true;
     }
-    if (!recomputeFlag) return;
+    if (changeMinIndex === Number.MIN_SAFE_INTEGER) return;
 
     // アイテムの高さを再計算する
     this.#itemLayouts = recomputeTopItemLayout(
@@ -231,19 +223,19 @@ export class VirtualListLayoutManager {
     const oldRowLayouts = this.#listViewLayout.rowLayouts;
 
     if (isAutoScroll === true) {
-      this.autoScroll = true;
+      this.#autoScroll = true;
     } else if (isAutoScroll === false) {
-      this.autoScroll = false;
+      this.#autoScroll = false;
     } else {
       const lastItem = this.#itemLayouts.at(-1)!;
-      this.autoScroll =
+      this.#autoScroll =
         lastItem.top + lastItem.height - this.#viewportHeight <=
         this.#scrollTop;
     }
 
     let firstRowIndex;
     let lastRowIndex;
-    if (this.autoScroll) {
+    if (this.#autoScroll) {
       const lastItem = this.#itemLayouts.at(-1);
       if (lastItem == null) {
         firstRowIndex = 0;
@@ -303,7 +295,7 @@ export class VirtualListLayoutManager {
 
     this.setScrollHeight();
 
-    if (this.autoScroll) {
+    if (this.#autoScroll) {
       this.#onScroll.fire(this.#scrollTop);
     }
   }
