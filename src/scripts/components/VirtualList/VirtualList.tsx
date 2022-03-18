@@ -29,7 +29,6 @@ export function VirtualListView(props: VirtualListViewProps) {
   const layoutManager = props.layoutManager;
 
   const [layout, setLayout] = useState(layoutManager.listViewLayout);
-  const [scrollFromProgram, setScrollFromProgram] = useState(false);
 
   // レイアウトの更新
   useLayoutEffect(() => {
@@ -44,11 +43,10 @@ export function VirtualListView(props: VirtualListViewProps) {
 
   // レイアウトからのスクロール位置更新
   useEffect(() => {
-    const handler = (scrollDif: number) => {
+    const handler = (top: number) => {
       const viewport = viewportRef.current;
       if (viewport === null) return;
-      viewport.scrollTop = scrollDif;
-      setScrollFromProgram(true);
+      viewport.scrollTop = top;
     };
 
     layoutManager.onScroll.add(handler);
@@ -66,21 +64,29 @@ export function VirtualListView(props: VirtualListViewProps) {
 
   const onScroll = useCallback(
     (e: React.UIEvent<HTMLDivElement, UIEvent>) => {
-      if (!scrollFromProgram) {
-        const viewport = viewportRef.current;
-        if (viewport === null) return;
+      const viewport = viewportRef.current;
+      if (viewport === null) return;
+      // console.log(e);
+      if (viewport.scrollTop !== layoutManager.scrollTop) {
+        console.log("user");
 
         layoutManager.setScrollPosition(viewport.scrollTop);
-      } else setScrollFromProgram(false);
+      } else console.log("program");
+
+      // if (!scrollFromProgram) {
+      //   layoutManager.setScrollPosition(viewport.scrollTop);
+      // } else setScrollFromProgram(false);
     },
-    [layoutManager, scrollFromProgram]
+    [layoutManager]
   );
 
   return (
     <div
       ref={viewportRef}
       className="list-view"
-      onScroll={onScroll}
+      onScroll={(e) => {
+        onScroll(e);
+      }}
       style={{
         width: props.width,
         height: props.height,
@@ -98,6 +104,21 @@ export function VirtualListView(props: VirtualListViewProps) {
     </div>
   );
 }
+
+const scrollEvent = (
+  e: React.UIEvent<HTMLDivElement, UIEvent>,
+  layoutManager: VirtualListLayoutManager,
+  viewport: HTMLDivElement,
+  scrollFromProgram: boolean
+) => {
+  if (!scrollFromProgram) {
+    console.log("scroll from ", scrollFromProgram ? "program" : "user");
+    if (viewport === null) return;
+
+    layoutManager.setScrollPosition(viewport.scrollTop);
+  }
+  //  } else setScrollFromProgram(false);
+};
 
 type LineupProps = {
   layoutManager: VirtualListLayoutManager;
@@ -117,10 +138,6 @@ function _Lineup(props: LineupProps) {
     const newValues: [number, number][] = [];
     for (let i = 0; i < layoutManager.listViewLayout.visibleRowCount; i++) {
       const child = lineup.children[i];
-      // console.log(
-      //   props.layoutManager.listViewLayout.rowLayouts[0].itemLayout.index + i,
-      //   child.clientHeight
-      //   );
       newValues.push([
         layoutManager.listViewLayout.rowLayouts[0].itemLayout.index + i,
         child.clientHeight,

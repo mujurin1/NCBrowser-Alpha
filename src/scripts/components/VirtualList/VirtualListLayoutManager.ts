@@ -46,6 +46,9 @@ export class VirtualListLayoutManager {
   #viewportHeight = 0;
   /** スクロール位置 */
   #scrollTop = 0;
+  public get scrollTop() {
+    return this.#scrollTop;
+  }
 
   /** 行の最小幅.デフォルトの高さとしても利用する */
   #minHeight: number;
@@ -164,8 +167,8 @@ export class VirtualListLayoutManager {
       return;
 
     let scrollHeightDif = 0;
-    let changeMinIndex = array[0][0];
-    let changeMaxIndex = changeMinIndex;
+    let changeMinIndex = Number.MAX_SAFE_INTEGER;
+    let changeMaxIndex = Number.MIN_SAFE_INTEGER;
     let recomputeFlag = false;
     // アイテムの新しい高さを設定する
     for (const [index, height] of array) {
@@ -176,7 +179,7 @@ export class VirtualListLayoutManager {
 
       this.#itemLayouts[index] = { ...layout, height };
       if (index < changeMinIndex) changeMinIndex = index;
-      else if (index > changeMaxIndex) changeMaxIndex = index;
+      if (index > changeMaxIndex) changeMaxIndex = index;
       recomputeFlag = true;
     }
     if (!recomputeFlag) return;
