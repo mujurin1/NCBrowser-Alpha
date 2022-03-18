@@ -2,3 +2,24 @@ body {
   font-family: "Segoe UI", Arial, Meiryo, sans-serif;
   font-size: 75%;
 }
+
+.list-view-row-no {
+  width: 80px;
+}
+
+.list-view-row-icon {
+  width: 60px;
+}
+
+.list-view-row-name {
+  width: 140px;
+}
+
+.list-view-row-time {
+  width: 120px;
+}
+
+.list-view-row-comment {
+  width: 200px;
+  /* flex-grow: 1; */
+}

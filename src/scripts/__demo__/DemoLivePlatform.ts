@@ -79,15 +79,15 @@ const demoUsers = [
   { id: "1", name: "デモ　Ａ" },
   {
     id: "2",
-    name: "デモ　ＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢＢ",
+    name: "デモ　Ｂ",
   },
   {
     id: "3",
-    name: "デモ　ＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣＣ",
+    name: "デモ　Ｃ",
   },
   {
     id: "4",
-    name: "デモ　ＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤＤ",
+    name: "デモ　Ｄ",
   },
   { id: "5", name: "デモ　Ｅ" },
 ];
@@ -101,8 +101,16 @@ function createComment(): DemoComment {
     globalId: nanoid(),
     innerId: `${demoComments}`,
     userInnerId: user.id,
-    comment: `userId:${user.id}, name: ${user.name}`,
+    // comment: `userId:${user.id}, name: ${user.name}`,
+    comment: randomComment(),
   };
+}
+function randomComment(): string {
+  const text = "テストテキストです";
+  const cnt = Math.random() * 10;
+  let comment = "";
+  for (let i = 0; i < cnt; i++) comment += text;
+  return comment;
 }
 
 const createUser = (userId: string): DemoUser => {

@@ -13,10 +13,11 @@ import { assert, defaultValueArray } from "../../utils/util";
 export type ItemLayout = {
   /** アイテムのインデックス */
   readonly index: number;
-  /** アイテムのTOP位置 */
-  readonly top: number;
-  /** アイテムの高さ */
-  readonly height: number;
+  /** 表示する行のエレメントに適用するレイアウト */
+  readonly style: {
+    readonly top: number;
+    readonly minHeight: number;
+  };
 };
 
 /**
@@ -88,7 +89,10 @@ export class VirtualListLayoutManager {
       scrollHeight: 0,
       visibleRowCount: 1,
       rowLayouts: [
-        { key: "0", itemLayout: { index: -10, height: -10, top: -10 } },
+        {
+          key: "0",
+          itemLayout: { index: -10, style: { minHeight: -10, top: -10 } },
+        },
       ],
     };
 
@@ -155,7 +159,8 @@ export class VirtualListLayoutManager {
       array.length === 0 ||
       array[0][0] === -1 ||
       array.every(
-        ([index, height]) => this.#itemLayouts[index]?.height === height
+        ([index, height]) =>
+          this.#itemLayouts[index]?.style?.minHeight === height
       )
     )
       return;
@@ -166,11 +171,14 @@ export class VirtualListLayoutManager {
     // アイテムの新しい高さを設定する
     for (const [index, height] of array) {
       const layout = this.#itemLayouts[index];
-      const dif = height - layout.height;
+      const dif = height - layout.style.minHeight;
       if (dif === 0) continue;
       scrollHeightDif += dif;
 
-      this.#itemLayouts[index] = { ...layout, height };
+      this.#itemLayouts[index] = {
+        ...layout,
+        style: { ...layout.style, minHeight: height },
+      };
       if (index < changeMinIndex) changeMinIndex = index;
       if (index > changeMaxIndex) changeMaxIndex = index;
     }
@@ -229,7 +237,7 @@ export class VirtualListLayoutManager {
     } else {
       const lastItem = this.#itemLayouts.at(-1)!;
       this.#autoScroll =
-        lastItem.top + lastItem.height - this.#viewportHeight <=
+        lastItem.style.top + lastItem.style.minHeight - this.#viewportHeight <=
         this.#scrollTop;
     }
 
@@ -244,7 +252,8 @@ export class VirtualListLayoutManager {
         // 一番下の行のインデックスは一番下のアイテムのインデックス
         lastRowIndex = lastItem.index;
         // #scrollTop を計算する
-        this.#scrollTop = lastItem.top + lastItem.height - this.#viewportHeight;
+        this.#scrollTop =
+          lastItem.style.top + lastItem.style.minHeight - this.#viewportHeight;
         if (this.#scrollTop < 0) this.#scrollTop = 0;
         // 一番上の行のインデックスを計算する
         firstRowIndex = binarySearch(this.#itemLayouts, this.#scrollTop);
@@ -272,17 +281,21 @@ export class VirtualListLayoutManager {
 
       for (let i = firstRowIndex; i < firstRowIndex + numViews; i++) {
         if (i <= lastRowIndex && this.#itemLayouts[i] != null) {
+          const layout = this.#itemLayouts[i];
           newRowLayouts.push({
             key: `${i % numViews}`,
             itemLayout: {
-              ...this.#itemLayouts[i],
-              top: this.#itemLayouts[i].top - this.#scrollTop,
+              ...layout,
+              style: {
+                ...layout.style,
+                top: this.#itemLayouts[i].style.top - this.#scrollTop,
+              },
             },
           });
         } else {
           newRowLayouts.push({
             key: `${i % numViews}`,
-            itemLayout: { index: -1, height: 0, top: 0 },
+            itemLayout: { index: -1, style: { minHeight: 0, top: 0 } },
           });
         }
       }
@@ -307,7 +320,8 @@ export class VirtualListLayoutManager {
     const lastItem = this.#itemLayouts.at(-1);
     this.#listViewLayout = {
       ...this.#listViewLayout,
-      scrollHeight: lastItem == null ? 0 : lastItem.top + lastItem.height,
+      scrollHeight:
+        lastItem == null ? 0 : lastItem.style.top + lastItem.style.minHeight,
     };
     this.#onRecomputedLayout.fire();
   }
@@ -323,7 +337,7 @@ function createItemLayouts(itemCount: number, height: number): ItemLayout[] {
   let top = 0;
 
   for (let i = layouts.length; i < itemCount; i++) {
-    layouts[i] = { index: i, height, top };
+    layouts[i] = { index: i, style: { minHeight: height, top } };
     top += height;
   }
 
@@ -342,10 +356,11 @@ function recomputeTopItemLayout(
   let top =
     startIndex === 0
       ? 0
-      : layouts[startIndex - 1].top + layouts[startIndex - 1].height;
+      : layouts[startIndex - 1].style.top +
+        layouts[startIndex - 1].style.minHeight;
   for (let i = startIndex; i < layouts.length; i++) {
-    layouts[i] = { ...layouts[i], top };
-    top += layouts[i].height;
+    layouts[i] = { ...layouts[i], style: { ...layouts[i].style, top } };
+    top += layouts[i].style.minHeight;
   }
   return layouts;
 }
@@ -363,10 +378,10 @@ function addItemLayouts(
 
   let top = 0;
   const lastItem = layouts.at(-1);
-  if (lastItem != null) top = lastItem.top + lastItem.height;
+  if (lastItem != null) top = lastItem.style.top + lastItem.style.minHeight;
   const bottom = layouts.length;
   for (let i = 0; i < heights.length; i++) {
-    layouts.push({ index: bottom + i, height: heights[i], top });
+    layouts.push({ index: bottom + i, style: { minHeight: heights[i], top } });
     top += heights[i];
   }
 
@@ -385,8 +400,8 @@ function binarySearch(itemLayouts: ItemLayout[], y: number): number {
   while (to > from + 1) {
     const mid = Math.floor((from + to) / 2);
 
-    if (itemLayouts[mid].top === y) return mid;
-    if (itemLayouts[mid].top > y) to = mid;
+    if (itemLayouts[mid].style.top === y) return mid;
+    if (itemLayouts[mid].style.top > y) to = mid;
     else from = mid;
   }
   return from;

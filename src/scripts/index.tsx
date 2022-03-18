@@ -24,9 +24,9 @@ LivePlatformManager.initialize(demoPlatform);
 let auto = false;
 setInterval(() => {
   if (auto) {
-    demoPlatform.newComments(10);
+    demoPlatform.newComments(2);
   }
-}, 10);
+}, 1000);
 
 function LivePlatformComments() {
   const [viewHeight, setViewHeight] = useState(500);
@@ -85,14 +85,36 @@ function LivePlatformComments() {
 function Row({
   rowLayout: {
     key,
-    itemLayout: { height, index, top },
+    itemLayout: { index, style },
   },
 }: RowRenderProps) {
+  const comment = ChatStore.comments.at(index)!;
+  const content = comment.content;
+  const user = ChatStore.users.get(comment.userGlobalId)!;
+  const state = user.state;
   return (
-    <div key={key} className="list-view-row" style={{ top, minHeight: height }}>
-      {`key-${key},i-${index},${ChatStore.comments.at(index)?.content?.text}`}
+    <div key={key} className="list-view-row" style={style}>
+      {/* {`key-${key},i-${index},${ChatStore.comments.at(index)?.content?.text}`} */}
+      <div className="list-view-row-no">{content.no ?? "--"}</div>
+      {RowIcon(state.iconUrl)}
+      <div className="list-view-row-name">{state.name}</div>
+      {RowTime(content.time)}
+      {/* <div className="list-view-row-time">{content.time}</div> */}
+      <div className="list-view-row-comment">{content.text}</div>
     </div>
   );
+}
+
+function RowIcon(imgSrc?: string) {
+  if (imgSrc == null) return <div className="list-view-row-icon" />;
+  else return <img className="list-view-row-icon" src={imgSrc} />;
+}
+function RowTime(time: number) {
+  const date = new Date(time);
+  const h = date.getHours();
+  const m = date.getMinutes();
+  const s = date.getSeconds();
+  return <div className="list-view-row-time">{`${h}:${m}:${s}`}</div>;
 }
 
 ReactDOM.render(
