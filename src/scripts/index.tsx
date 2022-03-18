@@ -26,7 +26,7 @@ setInterval(() => {
   if (auto) {
     demoPlatform.newComments(10);
   }
-}, 20);
+}, 50);
 
 function LivePlatformComments() {
   const [viewHeight, setViewHeight] = useState(500);
