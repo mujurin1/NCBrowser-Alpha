@@ -106,12 +106,21 @@ export class VirtualListLayoutManager {
   public setViewportHeight(height: number): void {
     if (height === this.#viewportHeight) return;
     const dif = height - this.#viewportHeight;
+
     this.#viewportHeight = height;
 
     this.#scrollTop -= dif;
     if (this.#scrollTop < 0) this.#scrollTop = 0;
 
     this.recomputeListViewLayout(false, this.#autoScroll);
+
+    // ビューの高さが変わるとスクロール位置も変える（上でなく下の行に合わせるため）
+    // ただ、連続して高さを変更すると`setScrollPosition`の中で、
+    // `top`と`#scrollTop`の位置が違うため、プログラムからのスクロールなのに以降の処理に進む不具合がある
+    // 先にレイアウト変更イベントを呼んで貰うため
+    setTimeout(() => {
+      this.#onScroll.fire(this.#scrollTop);
+    }, 0);
   }
 
   /**
@@ -119,6 +128,8 @@ export class VirtualListLayoutManager {
    * @param top スクロール座標
    */
   public setScrollPosition(top: number): void {
+    // （現状最適だが不具合のある）プログラムかユーザーかどっちのスクロールか判定する分岐
+    // true ならプログラム
     if (top === this.#scrollTop) return;
 
     const scrollUp = this.#scrollTop > top;

@@ -1,0 +1,31 @@
+{
+  "name": "@ncbrowser-alpha/niconama-api",
+  "repository": "https://github.com/mujurin1/NiconamaApi",
+  "version": "0.0.1",
+  "description": "",
+  "private": true,
+  "scripts": {
+    "test": "jest",
+    "build": "webpack",
+    "dev": "webpack --mode=development --env NODE_ENV=development --progress --hot --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "husky": "^7.0.4",
+    "prettier": "^2.6.0",
+    "typescript": "^4.6.3"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged; jest"
+    }
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --write './src/**/*.ts'"
+    ]
+  },
+  "main": "src/index.ts"
+}
