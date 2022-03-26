@@ -12,7 +12,8 @@
   "host_permissions": [
     "*://*.nicovideo.jp/*",
     "*://*.nimg.jp/*",
-    "*://*.dmc.nico/*"
+    "*://*.dmc.nico/*",
+    "https://us-central1-ncbrowseroauth.cloudfunctions.net/oauthCallback"
   ],
   "declarative_net_request": {
     "rule_resources": [
@@ -31,7 +32,7 @@
     {
       "matches": [
         "https://*.nicovideo.jp/*",
-        "https://us-central1-ncbrowseroauth.cloudfunctions.net/oauthComplate*"
+        "https://us-central1-ncbrowseroauth.cloudfunctions.net/*"
       ],
       "js": [
         "./content.js"

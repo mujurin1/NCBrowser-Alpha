@@ -38,6 +38,7 @@
     "@emotion/styled": "^11.8.1",
     "@mui/lab": "^5.0.0-alpha.72",
     "@mui/material": "^5.5.0",
+    "@ncb/niconama-api": "file:packages/NiconamaApi",
     "@reduxjs/toolkit": "^1.8.0",
     "core-js": "^3.19.2",
     "css-loader": "^6.7.0",

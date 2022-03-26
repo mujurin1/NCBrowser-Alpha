@@ -1,11 +1,7 @@
-import { Button, Input, Slider } from "@mui/material";
+import { Button, Slider } from "@mui/material";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import ReactDOM from "react-dom";
-import {
-  ItemLayout,
-  VirtualListLayoutManager,
-} from "./components/VirtualList/VirtualListLayoutManager";
-import { Fn } from "./types";
+import { VirtualListLayoutManager } from "./components/VirtualList/VirtualListLayoutManager";
 import {
   RowRenderProps,
   VirtualListView,
@@ -15,8 +11,19 @@ import { LivePlatformManager } from "./LivePlatform/LivePlatformManager";
 import { ChatStore } from "./LivePlatform/ChatStore";
 import { NcbComment } from "./LivePlatform/NcbComment";
 import { UpdateVariation } from "./LivePlatform/LivePlatform";
+import { ChromeStorage } from "./api/storage/LocalStorage";
+import { checkTokenRefresh } from "./api/nico/oauth";
+import { nicoApiGetLiveWsUrl } from "./api/nico/oauthApi";
 
 import "../styles/index.css";
+
+// ストレージ初期化後に実行する
+ChromeStorage.initialize().then(async () => {
+  // ニコニコAPIトークンチェック
+  await checkTokenRefresh();
+  // // OAuth APIテスト
+  // console.log(await nicoApiGetLiveWsUrl("lv336247168", "31103661"));
+});
 
 const demoPlatform = new DemoLivePlatform();
 LivePlatformManager.initialize(demoPlatform);
@@ -24,9 +31,9 @@ LivePlatformManager.initialize(demoPlatform);
 let auto = false;
 setInterval(() => {
   if (auto) {
-    demoPlatform.newComments(2);
+    demoPlatform.newComments(10);
   }
-}, 1000);
+}, 20);
 
 function LivePlatformComments() {
   const [viewHeight, setViewHeight] = useState(500);
@@ -56,8 +63,8 @@ function LivePlatformComments() {
   const resize = useCallback(
     (e: Event, height: number | number[]) => {
       if (typeof height === "number") {
-        layoutManager.setViewportHeight(height);
         setViewHeight(height);
+        layoutManager.setViewportHeight(height);
       }
     },
     [layoutManager]
@@ -95,7 +102,8 @@ function Row({
   return (
     <div key={key} className="list-view-row" style={style}>
       {/* {`key-${key},i-${index},${ChatStore.comments.at(index)?.content?.text}`} */}
-      <div className="list-view-row-no">{content.no ?? "--"}</div>
+      {/* <div className="list-view-row-no">{content.no ?? "--"}</div> */}
+      <div className="list-view-row-no">{`key-${key}`}</div>
       {RowIcon(state.iconUrl)}
       <div className="list-view-row-name">{state.name}</div>
       {RowTime(content.time)}
