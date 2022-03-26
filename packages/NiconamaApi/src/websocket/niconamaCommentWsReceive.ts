@@ -8,14 +8,14 @@
 export type NiconamaCommentWsReceiveMessage =
   | { chat: NiconamaChat }
   | { ping: NiconamaCommentPing }
-  | { thread: NiconamaThread };
+  | { thread: NiconamaCommentReceiveThread };
 
 /**
  * コメントデータ型\
  * コメントウェブソケットが受信する
  * @example `{"chat":{...}}`
  */
-export type NiconamaChat = {
+export interface NiconamaChat {
   /** 多分昔のアリーナなどの部屋IDのなごり？ */
   thread: string;
   /** コメント番号。公式放送は`undefined` */
@@ -38,16 +38,23 @@ export type NiconamaChat = {
   content: string;
   /** 1:自分自身のコメント */
   yourpost: number | undefined;
-};
+}
 
 /**
+ * 送信したpingはそのまま返される\
+ * コメント取得開始～終了の確認に利用される
  * @example `{"ping":{"content":"ps:0"}}`
  */
-export type NiconamaCommentPing = {
+export interface NiconamaCommentPing {
+  /** 実際はなんでも良いのだが、ここではstringに限定させてもらう */
   content: string;
-};
+}
 
 /**
+ * [資料PDF](https://niconama-workshop.slack.com/files/UBT6MQUJJ/F01M3711DLN/cached_message_server.pdf)
+ * より
+ * > キャッシュサーバとしての技術的制約により、
+ * > threadの`last_res`,`ticket`は正確ではない
  * @example `{
  *   "thread": {
  *     "resultcode": 0,
@@ -59,11 +66,11 @@ export type NiconamaCommentPing = {
  *   }
  * }`
  */
-export type NiconamaThread = {
+export interface NiconamaCommentReceiveThread {
   resultcode: number;
   thread: string;
   revision: number;
   server_time: number;
   last_res: number;
   ticket: string;
-};
+}

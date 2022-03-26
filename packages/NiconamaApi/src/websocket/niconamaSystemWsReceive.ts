@@ -49,7 +49,7 @@ export type NiconamaSystemWsReceiveMessage =
  *   }
  * }`
  */
-export type NiconamaAkashic = {
+export interface NiconamaAkashic {
   type: "akashic";
   data: {
     /** Akashicのプレーの状態 */
@@ -80,7 +80,7 @@ export type NiconamaAkashic = {
      */
     logServerUrl: string;
   };
-};
+}
 
 /**
  * 接続すべきコメントの部屋情報を通知するメッセージです\
@@ -104,7 +104,7 @@ export type NiconamaAkashic = {
  *   }
  * }
  */
-export type NiconamaRoom = {
+export interface NiconamaRoom {
   type: "room";
   data: {
     /** 部屋名 */
@@ -133,7 +133,7 @@ export type NiconamaRoom = {
      */
     vposBaseTime: string;
   };
-};
+}
 
 /**
  * 放送開始,延長時に受信する\
@@ -146,7 +146,7 @@ export type NiconamaRoom = {
  *  }
  * }`
  */
-export type NiconamaSchedule = {
+export interface NiconamaSchedule {
   type: "schedule";
   data: {
     /** 放送開始時刻 (ISO8601) */
@@ -154,7 +154,7 @@ export type NiconamaSchedule = {
     /** 放送終了時刻 (ISO8601) */
     end: string;
   };
-};
+}
 
 /**
  * @example `{
@@ -164,12 +164,12 @@ export type NiconamaSchedule = {
  *   }
  * }`
  */
-export type NiconamaSeat = {
+export interface NiconamaSeat {
   type: "seat";
   data: {
     keepIntervalSec: number;
   };
-};
+}
 
 /**
  * @example `{
@@ -179,13 +179,13 @@ export type NiconamaSeat = {
  *   }
  * }`
  */
-export type NiconamaServerTime = {
+export interface NiconamaServerTime {
   type: "serverTime";
   data: {
     /** サーバ時刻 (ISO8601形式、ミリ秒含む) */
     currentMs: string;
   };
-};
+}
 
 /**
  * 視聴者・コメント数等情報\
@@ -201,7 +201,7 @@ export type NiconamaServerTime = {
  *   }
  * }`
  */
-export type NiconamaStatistics = {
+export interface NiconamaStatistics {
   type: "statistics";
   data: {
     /** 累計視聴者数 */
@@ -215,7 +215,7 @@ export type NiconamaStatistics = {
     /** 同接数? 0:居ない 1:居る */
     concurrentViewerScale: number;
   };
-};
+}
 
 /**
  * @example `{
@@ -229,7 +229,7 @@ export type NiconamaStatistics = {
  *   }
  * }`
  */
-export type NiconamaStream = {
+export interface NiconamaStream {
   type: "stream";
   data: {
     uri: string;
@@ -238,16 +238,16 @@ export type NiconamaStream = {
     availableQualities: string[];
     protocol: string;
   };
-};
+}
 
 /**
  * 30秒に1度送信される\
  * 受信したら`pong`を返さないとwsを切断される
  * @example `{"type":"ping"}`
  */
-export type NiconamaSystemPing = {
+export interface NiconamaSystemPing {
   type: "ping";
-};
+}
 
 /**
  * 視聴終了を通知するメッセージです
@@ -258,11 +258,11 @@ export type NiconamaSystemPing = {
  *   }
  * }`
  */
-export type NiconamaDisconnect = {
+export interface NiconamaDisconnect {
   type: "disconect";
   /** 視聴終了の理由 */
   data: NiconamaDisconnectReasonType;
-};
+}
 
 /**
  * WebSocket の再接続要求を通知するメッセージです\
@@ -275,7 +275,7 @@ export type NiconamaDisconnect = {
  *   }
  * }`
  */
-export type NiconamaReconnect = {
+export interface NiconamaReconnect {
   type: "reconnect";
   data: {
     /**
@@ -289,7 +289,7 @@ export type NiconamaReconnect = {
      */
     waitTimeSec: number;
   };
-};
+}
 
 /**
  * コメント投稿(postComment)メッセージの結果
@@ -305,7 +305,7 @@ export type NiconamaReconnect = {
  *   }
  * }
  */
-export type NiconamaPostCommentResult = {
+export interface NiconamaPostCommentResult {
   type: "postCommentResult";
   data: {
     /** 投稿したコメントの情報 */
@@ -320,7 +320,7 @@ export type NiconamaPostCommentResult = {
       restricted: boolean;
     };
   };
-};
+}
 
 /**
  * タグに更新があったとき新しいリストを通知するメッセージです\
@@ -346,7 +346,7 @@ export type NiconamaPostCommentResult = {
  *   }
  * }
  */
-export type NiconamaTagUpdated = {
+export interface NiconamaTagUpdated {
   type: "tagUpdated";
   data: {
     /** 通常のタグの情報 */
@@ -357,7 +357,7 @@ export type NiconamaTagUpdated = {
       ownerLocked: boolean;
     };
   };
-};
+}
 
 /**
  * `NiconamaGetTaxonomy`を送信したときに現在のカテゴリと
@@ -392,7 +392,7 @@ export type NiconamaTagUpdated = {
  *   }
  * }`
  */
-export type NiconamaTaxonomy = {
+export interface NiconamaTaxonomy {
   type: "taxonomy";
   data: {
     /** 放送のカテゴリタグ */
@@ -410,7 +410,7 @@ export type NiconamaTaxonomy = {
       ownerLocked: boolean;
     };
   };
-};
+}
 
 /**
  * `getStreamQualities`を送信したときに
@@ -423,7 +423,7 @@ export type NiconamaTaxonomy = {
  *   }
  * }`
  */
-export type NiconamaStreamQualities = {
+export interface NiconamaStreamQualities {
   type: "streamQualities";
   data: {
     /**
@@ -434,7 +434,7 @@ export type NiconamaStreamQualities = {
     /** 視聴者が選択可能な画質 (追加・変更予定あり) */
     visible: NiconamaStreamQualitieType[];
   };
-};
+}
 
 /**
  * `getEventState` を送信したときに復元用の状態を通知するためのメッセージです
@@ -479,7 +479,7 @@ export type NiconamaStreamQualities = {
  *   }
  * }`
  */
-export type NiconamaEventState = {
+export interface NiconamaEventState {
   type: "eventState";
   data: {
     /** ユーザーコメントの状態 ※ないとき省略 */
@@ -499,4 +499,4 @@ export type NiconamaEventState = {
      */
     trialWatchState?: NiconamaTrialWatchState;
   };
-};
+}

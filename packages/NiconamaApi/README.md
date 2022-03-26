@@ -1,7 +1,5 @@
 ニコ生のAPIを纏めたものです
 
-（リンクはニコ生ワークショップの招待制のGithubへのリンクです）
-
 **types.ts**
 * ウェブソケット・APIで利用される型定義ファイル
 
@@ -10,6 +8,36 @@
 ニコ生OAuthから利用できるAPI
 [OAuth API](https://github.com/niconamaworkshop/api/blob/master/oauth/README.md)\
 （中にはOAuth関係なく利用できるAPIもある）
+
+ファイル名はワークショップでの名前をそのまま利用
+
+### Data format (Date/Time)
+日付・時刻は拡張ISO 8601フォーマット
+     yyyy-MM-ddTHH:mm:ssZZ
+例: "2021-01-01T13:00:00+09:00"
+
+### Request Body
+APIはJSONペイロード
+リクエストヘッダに`Content-type: application/json`が必要
+
+### Response Body
+APIによっては常に200を返す場合があるが、
+本来のステータスコードはレスポンスボディのメタ情報から得られる
+
+### 例外的なAPI
+getUserNickname（ユーザーのニックネームを取得するAPI)
+https://github.com/niconamaworkshop/api/blob/master/oauth/_GET_user_nickname.md
+* このAPIはOAuthを持っていなくても利用できる
+  （アクセストークンをリクエストヘッダに設定しなくてよい）
+* レスポンスの形式が他のAPIと異なる
+
+
+
+
+
+
+
+
 
 
 ## websocket

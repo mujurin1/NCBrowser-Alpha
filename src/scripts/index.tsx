@@ -14,15 +14,50 @@ import { UpdateVariation } from "./LivePlatform/LivePlatform";
 import { ChromeStorage } from "./api/storage/LocalStorage";
 import { checkTokenRefresh } from "./api/nico/oauth";
 import { nicoApiGetLiveWsUrl } from "./api/nico/oauthApi";
+import {
+  NiconamaCommentWs,
+  setNicoApiUseToken,
+  NiconamaGetUnamaProgramsRooms,
+  NiconamaChat,
+} from "@ncb/niconama-api";
 
 import "../styles/index.css";
 
 // ストレージ初期化後に実行する
 ChromeStorage.initialize().then(async () => {
+  // ================= OAuth APIテスト =================
   // ニコニコAPIトークンチェック
   await checkTokenRefresh();
-  // // OAuth APIテスト
-  // console.log(await nicoApiGetLiveWsUrl("lv336247168", "31103661"));
+
+  // API トークン取得関数セット
+  setNicoApiUseToken(() => ChromeStorage.storage.nico.oauth!.access_token);
+
+  // 延長
+  // await NiconamaPutUnamaProgramsExtension({
+  //   query: { userId: 31103661, nicoliveProgramId: "lv336277529" },
+  //   body: { minutes: 30 },
+  // }).then((res) => {
+  //   console.log(res.meta);
+  //   console.log(res.data);
+  // });
+
+  // コメント取得
+  const receiveChat = (chat: NiconamaChat) => {
+    console.log("chat");
+    console.log(chat);
+  };
+  const ws = await NiconamaGetUnamaProgramsRooms({
+    query: {
+      userId: 31103661,
+      nicoliveProgramId: "lv336277529",
+    },
+  }).then((res) => {
+    console.log(res.meta);
+    console.log(res.data);
+    const arena = res.data![0];
+    return new NiconamaCommentWs(arena, receiveChat);
+  });
+  ws.opendCall(() => ws.connectLive(10));
 });
 
 const demoPlatform = new DemoLivePlatform();

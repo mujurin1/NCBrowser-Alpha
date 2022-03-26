@@ -42,7 +42,7 @@ export type NiconamaSystemWsSendMessage =
  *   }
  * }`
  */
-export type NiconamaStartWatching = {
+export interface NiconamaStartWatching {
   type: "startWatching";
   data: {
     /**
@@ -57,7 +57,7 @@ export type NiconamaStartWatching = {
      */
     reconnect?: boolean;
   };
-};
+}
 
 /**
  * 座席を維持するためのハートビートメッセージ\
@@ -67,9 +67,9 @@ export type NiconamaStartWatching = {
  *   "type": "keepSeat"
  * }`
  */
-export type NiconamaKeepSeat = {
+export interface NiconamaKeepSeat {
   type: "keepSeat";
-};
+}
 
 /**
  * 新市場機能、生放送ゲームを起動するための情報を
@@ -81,7 +81,7 @@ export type NiconamaKeepSeat = {
  *   }
  * }`
  */
-export type NiconamaGetAkashic = {
+export interface NiconamaGetAkashic {
   type: "getAkashic";
   data: {
     /**
@@ -90,7 +90,7 @@ export type NiconamaGetAkashic = {
      */
     chasePlay: boolean;
   };
-};
+}
 
 /**
  * 視聴ストリームの送信をサーバーに求めるメッセージです\
@@ -106,10 +106,10 @@ export type NiconamaGetAkashic = {
  *   }
  * }`
  */
-export type NiconamaChangeStream = {
+export interface NiconamaChangeStream {
   type: "changeStream";
   data: NiconamaStreamSelect;
-};
+}
 
 /**
  * アンケートの回答を送信するメッセージです
@@ -120,19 +120,21 @@ export type NiconamaChangeStream = {
  *   }
  * }`
  */
-export type NiconamaAnswerEnquete = {
+export interface NiconamaAnswerEnquete {
   type: "answerEnquete";
   data: {
     /** 回答番号 (0から8までのインデックス) */
     answer: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
   };
-};
+}
 
 /**
  * websocket接続維持のための応答メッセージです
  * @example { "type": "pong" }
  */
-export type NiconamaPong = { type: "pong" };
+export interface NiconamaPong {
+  type: "pong";
+}
 
 /**
  * コメントを投稿するためのメッセージです
@@ -147,7 +149,7 @@ export type NiconamaPong = { type: "pong" };
  *   }
  * }`
  */
-export type NiconamaPostComment = {
+export interface NiconamaPostComment {
   type: "postComment";
   data: {
     /**
@@ -182,7 +184,7 @@ export type NiconamaPostComment = {
      */
     font?: NiconamaCommentFont;
   };
-};
+}
 
 /**
  * 番組のカテゴリ・タグを取得するためのメッセージ\
@@ -191,7 +193,9 @@ export type NiconamaPostComment = {
  * 視聴開始時に1回だけ使用する想定です。
  * @example `{ "type": "getTaxonomy" }`
  */
-export type NiconamaGetTaxonomy = { type: "getTaxonomy" };
+export interface NiconamaGetTaxonomy {
+  type: "getTaxonomy";
+}
 
 /**
  * 視聴可能画質一覧を取得するためのメッセージです\
@@ -199,7 +203,9 @@ export type NiconamaGetTaxonomy = { type: "getTaxonomy" };
  * 取得した一覧は`NiconamaChangeStream`で使用します
  * @example `{ "type": "getStreamQualities" }`
  */
-export type NiconamaGetStreamQualities = { type: "getStreamQualities" };
+export interface NiconamaGetStreamQualities {
+  type: "getStreamQualities";
+}
 
 /**
  * Liveの視聴開始時に復元用の状態を取得するためのメッセージです\
@@ -211,7 +217,7 @@ export type NiconamaGetStreamQualities = { type: "getStreamQualities" };
  *   "data": {}
  * }`
  */
-export type NiconamaGetEventState = {
+export interface NiconamaGetEventState {
   type: "getEventState";
   data: {};
-};
+}
