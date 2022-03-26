@@ -8,8 +8,8 @@ import {
   NiconamaJump,
   NiconamaTrialWatchState,
   NiconamaDisconnectReasonType,
+  NiconamaAkashicState,
 } from "../index";
-import { NiconamaAkashicState } from "./type";
 
 /**
  * システム用ウェブソケットが受信するメッセージJsonデータタイプ
@@ -31,11 +31,12 @@ export type NiconamaSystemWsReceiveMessage =
   | NiconamaReconnect
   | NiconamaPostCommentResult
   | NiconamaTagUpdated
-  | NiconamaGetTaxonomy
+  | NiconamaTaxonomy
   | NiconamaStreamQualities
   | NiconamaEventState;
 
 /**
+ * 新市場機能、生放送ゲームを起動するための情報
  * @example `{
  *   "type": "akashic",
  *   "data": {
@@ -82,7 +83,12 @@ export type NiconamaAkashic = {
 };
 
 /**
- * 接続すべきコメントの部屋情報を通知するメッセージです
+ * 接続すべきコメントの部屋情報を通知するメッセージです\
+ *
+ * 別で
+ * [部屋情報取得API](https://github.com/niconamaworkshop/api/blob/master/oauth/_GET_unama_programs_rooms.md)
+ * があるのでそっちを使ったほうが良いと思われる\
+ * というか、コメント取得目的ならそもそも`NiconamaSystemWs`を使わなくて良い
  * @example `{
  *   "type": "room",
  *   "data": {
@@ -354,7 +360,7 @@ export type NiconamaTagUpdated = {
 };
 
 /**
- * `getTaxonomy`を送信したときに現在のカテゴリと
+ * `NiconamaGetTaxonomy`を送信したときに現在のカテゴリと
  * タグのリストを通知するメッセージです。
  * @example `{
  *   "type": "taxonomy",
@@ -386,7 +392,7 @@ export type NiconamaTagUpdated = {
  *   }
  * }`
  */
-export type NiconamaGetTaxonomy = {
+export type NiconamaTaxonomy = {
   type: "taxonomy";
   data: {
     /** 放送のカテゴリタグ */
@@ -477,10 +483,11 @@ export type NiconamaEventState = {
   type: "eventState";
   data: {
     /** ユーザーコメントの状態 ※ないとき省略 */
-    commentState: NiconamaCommentState;
+    commentState?: NiconamaCommentState;
     /** 運営コメントの状態 ※ないとき省略 */
-    operatorComment: NiconamaOperatorCommentState;
-    enquete: NiconamaEnquete;
+    operatorComment?: NiconamaOperatorCommentState;
+    /** アンケート ※ないとき省略 */
+    enquete?: NiconamaEnquete;
     /**
      * ジャンプ (公式のみ) ※ないとき省略\
      * (放送終了後に移動するやつ?)
