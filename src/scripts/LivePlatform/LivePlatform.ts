@@ -13,7 +13,7 @@ export interface LivePlatform {
   readonly platformName: string;
   /**
    * 放送に接続しているか\
-   * （コメントを取得・送信・その他プラットフォームからのイベントが発生しうる状態か）
+   * （コメントを取得・送信等プラットフォームからのイベントが発生しうる状態か）
    */
   readonly connecting: boolean;
   /** 接続している放送の状態 */

@@ -24,8 +24,14 @@ export class DemoLivePlatform implements LivePlatform {
   readonly id = DemoLivePlatform.id;
   readonly platformName = DemoLivePlatform.platformName;
 
-  connecting: boolean = false;
-  liveState?: LiveState;
+  #connecting: boolean = false;
+  #liveState?: LiveState;
+  public get connecting() {
+    return this.#connecting;
+  }
+  public get liveState() {
+    return this.#liveState;
+  }
 
   readonly updateLiveState = this.#updateLiveState.asSetOnlyTrigger();
   readonly changeComments = this.#updateComments.asSetOnlyTrigger();
@@ -54,16 +60,16 @@ export class DemoLivePlatform implements LivePlatform {
   }
 }
 
-type DemoUser = {
+interface DemoUser {
   /** 全配信プラットフォームで固有のユーザーID */
   globalId: string;
   /** デモプラットフォーム内でのユーザーID */
   innerId: string;
   /** ユーザー名 */
   name: string;
-};
+}
 
-type DemoComment = {
+interface DemoComment {
   /** 全配信プラットフォームで固有のコメントID */
   globalId: string;
   /** デモプラットフォーム内でのコメントID */
@@ -72,7 +78,7 @@ type DemoComment = {
   userInnerId: string;
   /** コメント内容 */
   comment: string;
-};
+}
 
 let demoComments = 0;
 const demoUsers = [
@@ -126,7 +132,7 @@ const createUser = (userId: string): DemoUser => {
 const toNcbUser = (user: DemoUser): NcbUser => ({
   globalId: user.globalId,
   livePlatformId: DemoLivePlatform.id,
-  state: {
+  status: {
     name: user.name,
   },
 });

@@ -10,7 +10,7 @@ import { assert, defaultValueArray } from "../../utils/util";
 /**
  * リストに表示する要素。アイテムのレイアウト
  */
-export type ItemLayout = {
+export interface ItemLayout {
   /** アイテムのインデックス */
   readonly index: number;
   /** 表示する行のエレメントに適用するレイアウト */
@@ -18,29 +18,29 @@ export type ItemLayout = {
     readonly top: number;
     readonly minHeight: number;
   };
-};
+}
 
 /**
  * 実際に表示する並べる行のレイアウト
  */
-export type RowLayout = {
+export interface RowLayout {
   /** 行のキー */
   readonly key: string;
   /** アイテム */
   readonly itemLayout: ItemLayout;
-};
+}
 
 /**
  * リストビュー
  */
-export type ListViewLayout = {
+export interface ListViewLayout {
   /** スクロールするエリアの高さ */
   readonly scrollHeight: number;
   /** 表示する行の数 */
   readonly visibleRowCount: number;
   /** 各行レイアウトの配列 */
   readonly rowLayouts: RowLayout[];
-};
+}
 
 export class VirtualListLayoutManager {
   /** リストビューの高さ */

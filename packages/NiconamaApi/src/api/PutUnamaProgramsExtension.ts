@@ -1,5 +1,5 @@
 import { NiconamaApiResponseBody } from "./common";
-import { fetchApiRequestUseToken } from "./_common";
+import { fetchApiRequest } from "./_common";
 
 export interface NiconamaPutUnamaProgramsExtensionProp {
   query: {
@@ -45,5 +45,5 @@ export function NiconamaPutUnamaProgramsExtension({
   query,
   body,
 }: NiconamaPutUnamaProgramsExtensionProp): Promise<NiconamaPutUnamaProgramsExtensionResponse> {
-  return fetchApiRequestUseToken(requestUrl, "GET", query, body);
+  return fetchApiRequest(requestUrl, "GET", true, query, body);
 }

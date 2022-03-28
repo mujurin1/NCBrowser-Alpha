@@ -10,7 +10,7 @@ module.exports = {
   // distにビルドするjs/tsファイルを書き連ねる
   entry: {
     options: "./scripts/options.tsx",
-    content: "./scripts/content.tsx",
+    content: "./scripts/content.ts",
     index: "./scripts/index.tsx",
     // background moved to copy section because hot extension reloader pluging doesn"t work with bundled code that refers to window object
     // see more https://github.com/rubenspgcavalcante/webpack-extension-reloader/issues/125

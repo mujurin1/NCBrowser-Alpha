@@ -16,26 +16,47 @@ const tokenHeader = () => ({
 });
 
 /**
- * トークンが必要なAPIリクエストを行う
- * @param method HTTP Request method
+ * ニコニコOAuth APIリクエストを行う
  * @param baseUrl リクエストベースURL（?クエリ無し）
+ * @param method HTTP Request method
+ * @param useToken OAuth Tokenが必要か
  * @param query  URL末尾?のクエリ
  * @param body リクエストボディ
  */
-export function fetchApiRequestUseToken(
+export function fetchApiRequest(
   baseUrl: string,
   method: string,
+  useToken: boolean,
   query?: Record<string, string | number | undefined>,
   body?: Record<string, string | number | undefined>
 ): Promise<NiconamaApiResponseBody> {
   const url = concatQuery(baseUrl, query);
-  console.log("fetchApiRequestUseToken url: ", url);
 
   return fetch(url, {
     method: method,
-    headers: tokenHeader(),
+    headers: useToken ? tokenHeader() : defaultHeader,
     body: JSON.stringify(body),
   })
+    .then((res) => res.text())
+    .then((json) => JSON.parse(json));
+}
+
+/**
+ * ニコニコ NOAuth APIリクエストを行う\
+ * https://github.com/niconamaworkshop/websocket_api_document/tree/master/pdf
+ * @param baseUrl リクエストベースURL（?クエリ無し）
+ * @param method HTTP Request method
+ * @param useToken OAuth Tokenが必要か
+ */
+export function fetchNOAuthApiRequest(
+  baseUrl: string,
+  method: string,
+  useToken: boolean
+): Promise<NiconamaApiResponseBody> {
+  const headers: any = useToken
+    ? { Authorization: `Bearer ${getNicoApiUseToken()}` }
+    : {};
+  return fetch(baseUrl, { method, headers })
     .then((res) => res.text())
     .then((json) => JSON.parse(json));
 }

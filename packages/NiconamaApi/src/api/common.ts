@@ -8,6 +8,23 @@ export function setNicoApiUseToken(fn: () => string) {
 export let getNicoApiUseToken: () => string;
 
 /**
+ * `False`なら例外を出す
+ * @param condition
+ */
+export function assertNiconamaResponse(
+  name: string,
+  body: NiconamaApiResponseBody
+): asserts body {
+  const { meta, data } = body;
+  if (meta.status === 200) return;
+  throw new Error(
+    `Error: ${name}\nstatus: ${meta.status}. code: ${meta.errorCode}\n` +
+      `Message: ${meta.errorMessage}\n` +
+      `data:\n${JSON.stringify(data)}`
+  );
+}
+
+/**
  * ニコ生のAPIのレスポンス形式\
  * （[例外的なAPI]を除く）\
  * TODO: [例外的なAPI]をリンクにする

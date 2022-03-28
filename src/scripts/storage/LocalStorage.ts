@@ -1,24 +1,25 @@
-import { NicoTokenData } from "../nico/oauth";
+import { NiconamaIdToken } from "@ncb/niconama-api";
+import { NicoTokenData } from "../../niconama/types";
 
 /**
  * `chrome.storage.local`\
  * ストレージ全体の型
  */
-export type StorageData = {
+export interface StorageData {
   /** ニコニコ生放送 */
   nico: {
     /** ニコニコのOAuth情報 */
-    oauth: NicoTokenData | undefined;
+    oauth?: NicoTokenData;
+    /** ログインしているユーザーの情報やAPI Token情報 */
+    idTokens?: NiconamaIdToken;
   };
-};
+}
 
 /**
  * ストレージの初期値
  */
 export const initialStorageData: StorageData = {
-  nico: {
-    oauth: undefined,
-  },
+  nico: {},
 };
 
 /**

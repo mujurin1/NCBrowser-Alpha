@@ -29,6 +29,16 @@ export class NiconamaCommentWs {
    * readyState: [`CONNECTING`,`OPEN`,`CLOSING`,`CLOSED`]
    */
   #ws: WebSocket;
+  /**
+   * コメント取得状態
+   * * realtime: リアルタイムにコメントを受信している
+   * * ts: タイムシフト. コメントを受信することはありません
+   * * getPastComments: 過去コメを纏めて取得中
+   * * none: コメントを受信していません
+   */
+  #receiveState: "realtime" | "ts" | "getPastComments" | "none" = "none";
+  /** リアルタイム接続時・過去コメ取得時用のコメントキャッシュ */
+  #pastCommentCache: NiconamaChat[] = [];
 
   /** 部屋情報 */
   public readonly room: NiconamaCommentRoom;
@@ -38,7 +48,7 @@ export class NiconamaCommentWs {
     return this.#ws.readyState === 1;
   }
   /** コメント受信時に呼ばれる */
-  public onReceiveChat: (chat: NiconamaChat) => void;
+  public onReceiveChat: (...chats: NiconamaChat[]) => void;
   /** スレッド受信時に呼ばれる */
   public onReceiveThread?: (thread: NiconamaCommentReceiveThread) => void;
 
@@ -49,12 +59,12 @@ export class NiconamaCommentWs {
    */
   public constructor(
     room: NiconamaCommentRoom,
-    receiveChat: (chat: NiconamaChat) => void
+    receiveChat: (...chats: NiconamaChat[]) => void
   ) {
     this.room = room;
     this.onReceiveChat = receiveChat;
     this.#ws = new WebSocket(this.room.webSocketUri, ["msg.nicovideo.jp#json"]);
-    this.#ws.onmessage = (e) => this.receiveMessage(e);
+    this.#ws.onmessage = this.receiveMessage.bind(this);
   }
 
   /**
@@ -84,6 +94,7 @@ export class NiconamaCommentWs {
    * @param threadkey
    */
   public connectLive(resFrom: number, threadkey?: string) {
+    this.#receiveState = "getPastComments";
     this.sendMessage(
       {
         thread: {
@@ -105,14 +116,26 @@ export class NiconamaCommentWs {
     const message = JSON.parse(e.data) as NiconamaCommentWsReceiveMessage;
 
     if ("chat" in message) {
-      this.onReceiveChat(message.chat);
+      this.receiveChat(message.chat);
     } else if ("ping" in message) {
-      console.log("ping");
-      console.log(message.ping);
       this.receivePing(message.ping);
     } else if ("thread" in message) {
-      console.log("thread");
-      console.log(message.thread);
+      // console.log("thread");
+      // console.log(message.thread);
+    }
+  }
+
+  /**
+   * コメントを受信
+   * @param chat ニコ生コメント
+   */
+  private receiveChat(chat: NiconamaChat) {
+    switch (this.#receiveState) {
+      case "realtime":
+        this.onReceiveChat(chat);
+        break;
+      case "getPastComments":
+        this.#pastCommentCache.push(chat);
     }
   }
 
@@ -122,9 +145,14 @@ export class NiconamaCommentWs {
    */
   private receivePing(ping: NiconamaCommentPing) {
     if (ping === NiconamaCommentWs.#liveConnectedPing) {
-      // ライブ接続完了
+      this.onReceiveChat(...this.#pastCommentCache);
+      this.#receiveState = "realtime";
     } else if (ping === NiconamaCommentWs.#tsCommentPing) {
       // 過去コメ取得完了
+      this.onReceiveChat(...this.#pastCommentCache);
+      this.#receiveState = "ts";
+    } else {
+      // ここに来るはずはない
     }
   }
 
@@ -138,7 +166,7 @@ export class NiconamaCommentWs {
     if (!this.connecting) return;
 
     const data = `[${messages.map((x) => JSON.stringify(x))}]`;
-    console.log("send");
+    console.log("ニコ生コメントウェブソケット：送信");
     console.log(data);
 
     this.#ws!.send(data);

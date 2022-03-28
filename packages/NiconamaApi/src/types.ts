@@ -1,41 +1,41 @@
 type Values<T> = T[keyof T];
 
 /**  通常のタグ配列 */
-export type NiconamaTags = {
+export interface NiconamaTags {
   /** 更新後の通常タグ一覧 ※ない場合、空配列を返す */
   items: NiconamaTag[];
   /** 全体でロックされているかどうか */
   ownerLocked: boolean;
-};
+}
 
 /** 通常のタグの情報 */
-export type NiconamaTag = {
+export interface NiconamaTag {
   /** タグ内容 */
   text: string;
   /** ロックされているか */
   locked: boolean;
   /** 大百科リンク ※記事がない場合省略 */
   nicopediaArticleUrl?: string;
-};
+}
 
 /** カテゴリタグの情報 */
-export type NiconamaCategory = {
+export interface NiconamaCategory {
   /** カテゴリの文字列 */
   text: string;
   /** 大百科リンク ※記事がない場合省略 */
   nicopediaArticleUrl?: string;
-};
+}
 
 /** ユーザーコメントの状態 */
-export type NiconamaCommentState = {
+export interface NiconamaCommentState {
   /** コメント投稿が禁止されているか */
   locked: boolean;
   /** コメント表示のレイアウト */
   layout: NiconamaCommentLayoutType;
-};
+}
 
 /** 運営コメントの状態 */
-export type NiconamaOperatorCommentState = {
+export interface NiconamaOperatorCommentState {
   /** 本文 */
   body: string;
   /** コテハン ※ないとき省略 */
@@ -46,30 +46,30 @@ export type NiconamaOperatorCommentState = {
   decoration?: string;
   /** 固定コメントかどうか */
   isPermanent: boolean;
-};
+}
 /** アンケート */
-export type NiconamaEnquete = {
+export interface NiconamaEnquete {
   /** 質問文 */
   question: string;
   /** 選択肢 */
   results: NiconamaEnqueteResult[];
   /** アンケートの状態 */
   status: NiconamaEnqueteStateType;
-};
+}
 
 /** アンケートの選択肢及び回答 */
-export type NiconamaEnqueteResult = {
+export interface NiconamaEnqueteResult {
   /** 選択肢本文 */
   item: string;
   /** 選択肢回答率(集計済みの場合のみ) */
   percentage?: number;
-};
+}
 
 /**
  * ジャンプ (公式のみ)
  * (放送終了後に移動するやつ?)
  */
-export type NiconamaJump = {
+export interface NiconamaJump {
   /** ジャンプ時に表示するメッセージ */
   message: string;
   /** ジャンプ先のURL */
@@ -81,20 +81,20 @@ export type NiconamaJump = {
     /** コンテンツ種別 */
     type: NiconamaContentType;
   };
-};
+}
 
 /** チラ見せ状態 */
-export type NiconamaTrialWatchState = {
+export interface NiconamaTrialWatchState {
   /** チラ見せが有効かどうか */
   enabled: true;
   /** チラ見せのコメントモード */
   commentMode: NiconamaTrialWatchCommentModeType;
-};
+}
 
 /**
  * 視聴ストリーム関係
  */
-export type NiconamaStreamSelect = {
+export interface NiconamaStreamSelect {
   /** 視聴する画質 */
   quality: NiconamaStreamQualitieType;
   /**
@@ -111,7 +111,7 @@ export type NiconamaStreamSelect = {
    * 追っかけ再生が無効な番組で`true`だとエラーになる
    */
   chasePlay?: boolean;
-};
+}
 
 // ========================== 列挙型定義 ==========================
 /** Akashicのプレーの状態 */

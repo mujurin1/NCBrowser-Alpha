@@ -13,17 +13,17 @@ import {
 
 import "./style.css";
 
-export type RowRenderProps = {
+export interface RowRenderProps {
   /** 表示する行のレイアウト */
   rowLayout: RowLayout;
-};
+}
 
-export type VirtualListViewProps = {
+export interface VirtualListViewProps {
   layoutManager: VirtualListLayoutManager;
   width: number;
   height: number;
   rowRender: Fn<[RowRenderProps], JSX.Element>;
-};
+}
 
 export function VirtualListView(props: VirtualListViewProps) {
   const layoutManager = props.layoutManager;
@@ -91,11 +91,11 @@ export function VirtualListView(props: VirtualListViewProps) {
   );
 }
 
-type LineupProps = {
+interface LineupProps {
   layoutManager: VirtualListLayoutManager;
   rowLayouts: RowLayout[];
   rowRender: Fn<[RowRenderProps], JSX.Element>;
-};
+}
 
 function _Lineup(props: LineupProps) {
   const layoutManager = props.layoutManager;

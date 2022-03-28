@@ -1,5 +1,5 @@
 import { NiconamaApiResponseBody } from "./common";
-import { fetchApiRequestUseToken } from "./_common";
+import { fetchApiRequest } from "./_common";
 
 export interface NiconamaGetUnamaProgramsRoomsProp {
   query: {
@@ -49,5 +49,5 @@ const requestUrl = "https://api.live2.nicovideo.jp/api/v1/unama/programs/rooms";
 export function NiconamaGetUnamaProgramsRooms({
   query,
 }: NiconamaGetUnamaProgramsRoomsProp): Promise<NiconamaGetUnamaProgramsRoomsResponse> {
-  return fetchApiRequestUseToken(requestUrl, "GET", query);
+  return fetchApiRequest(requestUrl, "GET", true, query);
 }
