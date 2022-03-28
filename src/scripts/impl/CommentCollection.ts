@@ -1,6 +1,10 @@
-import { NcbComment } from "../LivePlatform/NcbComment";
-import { Fn } from "../types";
+import { NcbComment } from "../model/NcbComment";
+import { Fn } from "../common/util";
 
+/**
+ * NcbComment用のコレクション\
+ * 読み取り専用
+ */
 export interface ReadonlyCommentCollection extends Iterable<NcbComment> {
   length: number;
 

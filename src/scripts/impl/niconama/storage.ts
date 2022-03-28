@@ -1,5 +1,5 @@
 import { NiconamaIdToken } from "@ncb/niconama-api";
-import { ChromeStorage } from "../scripts/storage/LocalStorage";
+import { ChromeStorage } from "../../storage/LocalStorage";
 import { NicoTokenData } from "./types";
 
 /**

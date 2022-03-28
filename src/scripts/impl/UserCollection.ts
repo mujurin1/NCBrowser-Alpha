@@ -1,6 +1,10 @@
-import { NcbUser } from "../LivePlatform/NcbUser";
-import { Fn } from "../types";
+import { NcbUser } from "../model/NcbUser";
+import { Fn } from "../common/util";
 
+/**
+ * NcbUser用のコレクション\
+ * 読み取り専用
+ */
 export interface ReadonlyUserCollection extends Iterable<NcbUser> {
   length: number;
 

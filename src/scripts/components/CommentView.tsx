@@ -1,10 +1,10 @@
 import { Button, Slider } from "@mui/material";
 import { height } from "@mui/system";
 import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { ChatStore } from "../LivePlatform/ChatStore";
-import { UpdateVariation } from "../LivePlatform/LivePlatform";
-import { LivePlatformManager } from "../LivePlatform/LivePlatformManager";
-import { NcbComment } from "../LivePlatform/NcbComment";
+import { ChatStore } from "../impl/ChatStore";
+import { UpdateVariation } from "../model/LivePlatform";
+import { ChatNotify } from "../impl/ChatNotify";
+import { NcbComment } from "../model/NcbComment";
 import { RowRenderProps, VirtualListView } from "./VirtualList/VirtualList";
 import { VirtualListLayoutManager } from "./VirtualList/VirtualListLayoutManager";
 
@@ -31,19 +31,17 @@ export function CommentView(props: CommentViewProps) {
         );
       }
     };
-    LivePlatformManager.allChangeComments.add(handler);
-    return () => LivePlatformManager.allChangeComments.delete(handler);
+    ChatNotify.allChangeComments.add(handler);
+    return () => ChatNotify.allChangeComments.delete(handler);
   }, [ChatStore.comments, layoutManager]);
 
   return (
-    <>
-      <VirtualListView
-        layoutManager={layoutManager}
-        width={props.width}
-        height={props.height}
-        rowRender={Row}
-      />
-    </>
+    <VirtualListView
+      layoutManager={layoutManager}
+      width={props.width}
+      height={props.height}
+      rowRender={Row}
+    />
   );
 }
 

@@ -1,15 +1,16 @@
 import {
   CommentCollection,
   ReadonlyCommentCollection,
-} from "../common/CommentCollection";
-import {
-  ReadonlyUserCollection,
-  UserCollection,
-} from "../common/UserCollection";
-import { UpdateVariation } from "./LivePlatform";
-import { NcbComment } from "./NcbComment";
-import { NcbUser } from "./NcbUser";
+} from "./CommentCollection";
+import { ReadonlyUserCollection, UserCollection } from "./UserCollection";
+import { UpdateVariation } from "../model/LivePlatform";
+import { NcbComment } from "../model/NcbComment";
+import { NcbUser } from "../model/NcbUser";
 
+/**
+ * LivePlatformManager が返すチャット情報のストア\
+ * ユーザーとコメント
+ */
 export class ChatStore {
   static #comments = new CommentCollection();
   static #users = new UserCollection();

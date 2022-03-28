@@ -1,5 +1,5 @@
 import { Trigger } from "../../common/Trigger";
-import { assert, defaultValueArray } from "../../utils/util";
+import { assert } from "../../common/util";
 
 /* ListView 表示されるビュー
  * Row      リストの行
@@ -151,7 +151,11 @@ export class VirtualListLayoutManager {
       heights = [];
       this.#itemLayouts = this.#itemLayouts.splice(0, rowCount);
     } else {
-      if (heights == null) heights = defaultValueArray(plus, this.#minHeight);
+      if (heights == null) {
+        heights = [];
+        for (let i = 0; i < plus; i++) heights.push(this.#minHeight);
+      }
+
       this.#itemLayouts = addItemLayouts(this.#itemLayouts, heights);
     }
 

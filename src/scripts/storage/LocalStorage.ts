@@ -1,5 +1,5 @@
 import { NiconamaIdToken } from "@ncb/niconama-api";
-import { NicoTokenData } from "../../niconama/types";
+import { NicoTokenData } from "../impl/niconama/types";
 
 /**
  * `chrome.storage.local`\

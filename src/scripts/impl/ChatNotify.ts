@@ -1,17 +1,19 @@
 import { SetOnlyTrigger, Trigger } from "../common/Trigger";
 import { ChatStore } from "./ChatStore";
-import { LivePlatform, UpdateVariation } from "./LivePlatform";
-import { LiveState } from "./LiveState";
-import { NcbComment } from "./NcbComment";
-import { NcbUser } from "./NcbUser";
+import { LivePlatform, UpdateVariation } from "../model/LivePlatform";
+import { LiveState } from "../model/LiveState";
+import { NcbComment } from "../model/NcbComment";
+import { NcbUser } from "../model/NcbUser";
 
-export class LivePlatformManager {
+/**
+ * 各配信プラットフォームのチャット受信を通知する\
+ */
+export class ChatNotify {
   static #livePlatforms: ReadonlyArray<LivePlatform>;
   public static get livePlatforms() {
-    return LivePlatformManager.#livePlatforms;
+    return ChatNotify.#livePlatforms;
   }
 
-  static readonly #allUpdateLiveState = new Trigger<[LiveState]>();
   static readonly #allChangeComments = new Trigger<
     [UpdateVariation, ...NcbComment[]]
   >();
@@ -19,46 +21,38 @@ export class LivePlatformManager {
     [UpdateVariation, ...NcbUser[]]
   >();
 
-  /** いずれかの配信プラットフォームの放送の状態が更新されたことを通知する */
-  static readonly allUpdateLiveState =
-    LivePlatformManager.#allUpdateLiveState.asSetOnlyTrigger();
   /**
    * いずれかの配信プラットフォームのコメントが変化（追加・更新・削除）したことを通知する\
    * 通知を送信する時点で`comment.globalUserId`のユーザーは`allChangeUsers`により通知されていることを保証する
    */
   static readonly allChangeComments =
-    LivePlatformManager.#allChangeComments.asSetOnlyTrigger();
+    ChatNotify.#allChangeComments.asSetOnlyTrigger();
   /** 全配信プラットフォームのユーザー更新通知（追加・更新・削除）を受信 */
   static readonly allChangeUsers =
-    LivePlatformManager.#allChangeUsers.asSetOnlyTrigger();
+    ChatNotify.#allChangeUsers.asSetOnlyTrigger();
 
   public static initialize(...livePlatforms: LivePlatform[]) {
-    LivePlatformManager.#livePlatforms = livePlatforms;
+    ChatNotify.#livePlatforms = livePlatforms;
     // ChatStoreの情報を更新呼び出しを追加する
-    LivePlatformManager.allChangeComments.add((valiation, ...comments) => {
+    ChatNotify.allChangeComments.add((valiation, ...comments) => {
       ChatStore.changeComments(valiation, ...comments);
     });
-    LivePlatformManager.allChangeUsers.add((valiation, ...users) => {
+    ChatNotify.allChangeUsers.add((valiation, ...users) => {
       ChatStore.changeUsers(valiation, ...users);
     });
 
     // 各配信プラットフォーム通知に全配信通知呼び出しを追加する
-    LivePlatformManager.livePlatforms.forEach((platform) => {
-      platform.updateLiveState.add((state) => {
-        LivePlatformManager.#allUpdateLiveState.fire(state);
-      });
+    ChatNotify.livePlatforms.forEach((platform) => {
       platform.changeUsers.add((valiation, ...users) =>
-        LivePlatformManager.#allChangeUsers.fire(valiation, ...users)
+        ChatNotify.#allChangeUsers.fire(valiation, ...users)
       );
       platform.changeComments.add((valiation, ...comments) => {
-        LivePlatformManager.#allChangeComments.fire(valiation, ...comments);
+        ChatNotify.#allChangeComments.fire(valiation, ...comments);
       });
     });
   }
 
   public get(id: string): LivePlatform | undefined {
-    return LivePlatformManager.livePlatforms.find(
-      (platform) => platform.id === id
-    );
+    return ChatNotify.livePlatforms.find((platform) => platform.id === id);
   }
 }

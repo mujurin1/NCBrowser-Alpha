@@ -1,4 +1,4 @@
-import { Fn } from "../types";
+import { Fn } from "./util";
 
 /**
  * トリガーへ関数の追加・削除のみさせるインターフェース

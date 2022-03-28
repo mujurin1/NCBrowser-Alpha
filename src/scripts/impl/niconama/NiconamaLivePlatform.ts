@@ -4,33 +4,13 @@ import {
   NiconamaCommentRoom,
   NiconamaCommentWs,
   NiconamaGetUnamaProgramsRooms,
-  NiconamaRoom,
 } from "@ncb/niconama-api";
 import { nanoid } from "nanoid";
-import { Trigger } from "../scripts/common/Trigger";
-import {
-  LivePlatform,
-  UpdateVariation,
-} from "../scripts/LivePlatform/LivePlatform";
-import { LiveState } from "../scripts/LivePlatform/LiveState";
-import { NcbComment } from "../scripts/LivePlatform/NcbComment";
-import { NcbUser } from "../scripts/LivePlatform/NcbUser";
-
-//   // ================= OAuth APIテスト =================
-//   // コメント取得
-//   const receiveChat = (chat: NiconamaChat) => {
-//     console.log("chat");
-//     console.log(chat);
-//   };
-//   const { meta, data } = await NiconamaGetUnamaProgramsRooms({
-//     query: {
-//       userId: 31103661,
-//       nicoliveProgramId: "lv336277529",
-//     },
-//   });
-//   const arena = data![0];
-//   const ws = new NiconamaCommentWs(arena, receiveChat);
-//   ws.opendCall(() => ws.connectLive(10));
+import { Trigger } from "../../common/Trigger";
+import { LivePlatform, UpdateVariation } from "../../model/LivePlatform";
+import { LiveState } from "../../model/LiveState";
+import { NcbComment } from "../../model/NcbComment";
+import { NcbUser } from "../../model/NcbUser";
 
 export class NiconamaLivePlatform implements LivePlatform {
   /** ニコ生ユーザー情報 */
@@ -103,6 +83,8 @@ export class NiconamaLivePlatform implements LivePlatform {
    * @params chats ニコ生コメント配列
    */
   private receiveChat(...chats: NiconamaChat[]) {
+    console.log("receiveChat", chats);
+
     // 新規コメント・新規ユーザー
     const comments: NcbComment[] = [];
     const users: NcbUser[] = [];
@@ -116,9 +98,9 @@ export class NiconamaLivePlatform implements LivePlatform {
         users.push(toNcbUser(user));
       }
       comments.push(toNcbComment(comment, user));
-      if (users.length > 0) this.#updateUsers.fire("Add", ...users);
-      this.#updateComments.fire("Add", ...comments);
     }
+    if (users.length > 0) this.#updateUsers.fire("Add", ...users);
+    this.#updateComments.fire("Add", ...comments);
   }
 }
 

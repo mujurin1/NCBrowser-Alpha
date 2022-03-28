@@ -16,13 +16,9 @@ import {
  */
 export class NiconamaCommentWs {
   /** ライブ接続時コメント取得完了メッセージ */
-  static readonly #liveConnectedPing: NiconamaCommentPing = {
-    content: "Live",
-  };
+  static readonly #liveConnectedPingContent: string = "Live";
   /** 過去コメ取得完了 */
-  static readonly #tsCommentPing: NiconamaCommentPing = {
-    content: "Ts",
-  };
+  static readonly #tsCommentPingContent: string = "Ts";
 
   /**
    * 接続中のWebSocket\
@@ -104,7 +100,7 @@ export class NiconamaCommentWs {
           threadkey,
         },
       },
-      { ping: NiconamaCommentWs.#liveConnectedPing }
+      { ping: { content: NiconamaCommentWs.#liveConnectedPingContent } }
     );
   }
 
@@ -130,6 +126,8 @@ export class NiconamaCommentWs {
    * @param chat ニコ生コメント
    */
   private receiveChat(chat: NiconamaChat) {
+    console.log("receive chat");
+
     switch (this.#receiveState) {
       case "realtime":
         this.onReceiveChat(chat);
@@ -144,12 +142,14 @@ export class NiconamaCommentWs {
    * @param ping NiconamaCommentPing
    */
   private receivePing(ping: NiconamaCommentPing) {
-    if (ping === NiconamaCommentWs.#liveConnectedPing) {
-      this.onReceiveChat(...this.#pastCommentCache);
+    console.log("receive ping", ping.content);
+    if (ping.content === NiconamaCommentWs.#liveConnectedPingContent) {
+      // リアルタイム視聴接続時過去コメ取得完了
+      this.onReceiveChat(...this.#pastCommentCache.splice(0));
       this.#receiveState = "realtime";
-    } else if (ping === NiconamaCommentWs.#tsCommentPing) {
+    } else if (ping.content === NiconamaCommentWs.#tsCommentPingContent) {
       // 過去コメ取得完了
-      this.onReceiveChat(...this.#pastCommentCache);
+      this.onReceiveChat(...this.#pastCommentCache.splice(0));
       this.#receiveState = "ts";
     } else {
       // ここに来るはずはない
@@ -166,8 +166,7 @@ export class NiconamaCommentWs {
     if (!this.connecting) return;
 
     const data = `[${messages.map((x) => JSON.stringify(x))}]`;
-    console.log("ニコ生コメントウェブソケット：送信");
-    console.log(data);
+    console.log("ニコ生コメントウェブソケット送信", data);
 
     this.#ws!.send(data);
   }

@@ -2,13 +2,13 @@ import { Button, Slider } from "@mui/material";
 import React, { useCallback, useMemo, useState } from "react";
 import ReactDOM from "react-dom";
 import { VirtualListLayoutManager } from "./components/VirtualList/VirtualListLayoutManager";
-import { DemoLivePlatform } from "./__demo__/DemoLivePlatform";
-import { LivePlatformManager } from "./LivePlatform/LivePlatformManager";
-import { ChatStore } from "./LivePlatform/ChatStore";
+import { DemoLivePlatform } from "./impl/__demo__/DemoLivePlatform";
+import { ChatNotify } from "./impl/ChatNotify";
+import { ChatStore } from "./impl/ChatStore";
 import { CommentView } from "./components/CommentView";
 import { ChromeStorage } from "./storage/LocalStorage";
-import { NiconamaLivePlatform } from "../niconama/NiconamaLivePlatform";
-import { niocnamaApiInitialize } from "../niconama/initialize";
+import { NiconamaLivePlatform } from "./impl/niconama/NiconamaLivePlatform";
+import { niocnamaApiInitialize } from "./impl/niconama/initialize";
 
 import "../styles/index.css";
 
@@ -17,19 +17,20 @@ ChromeStorage.initialize().then(async () => {
   niocnamaApiInitialize();
 });
 
+// ライブプラットフォームを初期化
 const demoPlatform = new DemoLivePlatform();
 const niconama = new NiconamaLivePlatform();
-LivePlatformManager.initialize(demoPlatform, niconama);
+ChatNotify.initialize(demoPlatform, niconama);
 
 let auto = false;
 setInterval(() => {
   if (auto) {
-    demoPlatform.newComments(10);
+    demoPlatform.newComments(1);
   }
-}, 20);
+}, 500);
 
 function LivePlatformComments() {
-  const [viewSize, setViewSize] = useState({ widht: 500, height: 500 });
+  const [viewSize, setViewSize] = useState({ widht: 800, height: 500 });
 
   const layoutManager = useMemo(
     () => new VirtualListLayoutManager(20, ChatStore.comments.length),
@@ -49,10 +50,9 @@ function LivePlatformComments() {
     auto = !auto;
   }, []);
   const connectNiconama = useCallback(() => {
-    console.log(ChromeStorage.storage.nico.idTokens?.sub);
     niconama.connectLive(
       Number(ChromeStorage.storage.nico.idTokens?.sub),
-      "lv336289320"
+      "lv336307088"
     );
   }, []);
 

@@ -5,7 +5,7 @@ import React, {
   useCallback,
   useEffect,
 } from "react";
-import { Fn } from "../../types";
+import { Fn } from "../../common/util";
 import {
   RowLayout,
   VirtualListLayoutManager,

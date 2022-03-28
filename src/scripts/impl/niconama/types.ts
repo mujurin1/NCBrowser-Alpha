@@ -1,6 +1,3 @@
-import { ChromeStorage } from "../scripts/storage/LocalStorage";
-import { saveNicoOAuth } from "./storage";
-
 /**
  * ニコ生API Response Bodyが共有する形式\
  * ニコ生APIは JSON ペイロードを使用する

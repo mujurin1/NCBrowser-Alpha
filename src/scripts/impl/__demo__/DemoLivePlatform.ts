@@ -1,10 +1,10 @@
 import { nanoid } from "nanoid";
-import { Trigger } from "../common/Trigger";
-import { LivePlatform, UpdateVariation } from "../LivePlatform/LivePlatform";
-import { LiveState } from "../LivePlatform/LiveState";
-import { NcbComment } from "../LivePlatform/NcbComment";
-import { NcbUser } from "../LivePlatform/NcbUser";
-import { assert } from "../utils/util";
+import { Trigger } from "../../common/Trigger";
+import { LivePlatform, UpdateVariation } from "../../model/LivePlatform";
+import { LiveState } from "../../model/LiveState";
+import { NcbComment } from "../../model/NcbComment";
+import { NcbUser } from "../../model/NcbUser";
+import { assert } from "../../common/util";
 
 /**
  * テスト用デモ配信プラットフォーム

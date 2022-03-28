@@ -1,7 +1,7 @@
 import { NiconamaIdToken } from "@ncb/niconama-api";
-import { saveNicoOAuth } from "../niconama/storage";
-import { NicoTokenData } from "../niconama/types";
-import { assert } from "./utils/util";
+import { saveNicoOAuth } from "./impl/niconama/storage";
+import { NicoTokenData } from "./impl/niconama/types";
+import { assert } from "./common/util";
 
 /*
  * ニコ生OAuthトークンを再設定する\

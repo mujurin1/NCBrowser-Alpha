@@ -1,5 +1,5 @@
 import { setNicoApiUseToken } from "@ncb/niconama-api";
-import { ChromeStorage } from "../scripts/storage/LocalStorage";
+import { ChromeStorage } from "../../storage/LocalStorage";
 import { checkTokenRefresh } from "./oauthGetServer";
 
 /**

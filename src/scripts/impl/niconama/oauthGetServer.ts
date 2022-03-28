@@ -1,4 +1,4 @@
-import { ChromeStorage } from "../scripts/storage/LocalStorage";
+import { ChromeStorage } from "../../storage/LocalStorage";
 import { saveNicoOAuth } from "./storage";
 import { NicoTokenData } from "./types";
 
