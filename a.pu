@@ -1,0 +1,23 @@
+@startuml a
+
+interface LivePlatform
+
+class NiconamaLivePlatform
+class TwitchLivePlatform
+
+class ChatNotify
+class ChatStore
+
+class CommentView
+
+NiconamaLivePlatform --|> LivePlatform
+TwitchLivePlatform --|> LivePlatform
+
+LivePlatform o-- ChatNotify 
+ChatNotify x--> ChatStore
+
+LivePlatform <.. CommentView
+ChatNotify <.. CommentView
+ChatStore <--x CommentView
+
+@enduml
